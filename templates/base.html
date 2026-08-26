@@ -1,0 +1,46 @@
+<!-- Darsh Financial Dashboard: modern dark finance interface using Flask, Tailwind CSS, Chart.js, and vanilla JavaScript. -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="Darsh Financial Dashboard — Track expenses, visualize spending patterns, and export financial reports." />
+    <title>{% block title %}Darsh Financial Dashboard{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              display: ['Outfit', 'sans-serif'],
+            },
+            colors: {
+              surface: { 900: '#0b1120', 800: '#0f172a', 700: '#1e293b', 600: '#334155', 500: '#475569' },
+              accent: { DEFAULT: '#818cf8', light: '#a5b4fc', dim: '#6366f1' },
+              cyan: { DEFAULT: '#22d3ee', light: '#67e8f9' },
+              glass: 'rgba(30,41,59,.65)',
+              'glass-light': 'rgba(51,65,85,.45)',
+              'glass-border': 'rgba(148,163,184,.18)',
+              'text-primary': '#f1f5f9',
+              'text-secondary': '#94a3b8',
+              'text-muted': '#64748b',
+              'success': '#34d399',
+              'danger': '#f87171',
+              'warning': '#fbbf24',
+            },
+          },
+        },
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+  </head>
+  <body>
+    {% block content %}{% endblock %}
+  </body>
+</html>

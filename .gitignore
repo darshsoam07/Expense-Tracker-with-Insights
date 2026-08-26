@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.venv/
+instance/*.db
+*** Update File: /home/ubuntu/expense-tracker-insights/todo.md
+@@
+-- [ ] Create a minimal Flask project structure with one `app.py`, `templates/`, and `static/` directories.
+-- [ ] Preserve SQLite-backed authentication and expense CRUD routes.
+-- [ ] Rebuild the reference-aligned dashboard in a single HTML template using Tailwind CSS and vanilla JavaScript only.
+-- [ ] Keep category filtering, analytics calculations, deletion, and CSV export without React or TypeScript.
+-- [ ] Add clear local setup instructions and a minimal `requirements.txt` file.
+-- [ ] Validate the Flask application, JSON endpoints, and responsive dashboard layout.
+- [x] Create a minimal Flask project structure with one `app.py`, `templates/`, and `static/` directories.
+- [x] Preserve SQLite-backed authentication and expense CRUD routes.
+- [x] Rebuild the reference-aligned dashboard in a single HTML template using Tailwind CSS and vanilla JavaScript only.
+- [x] Keep category filtering, analytics calculations, deletion, and CSV export without React or TypeScript.
+- [x] Add clear local setup instructions and a minimal `requirements.txt` file.
+- [x] Validate the Flask application, JSON endpoints, and responsive dashboard layout.
