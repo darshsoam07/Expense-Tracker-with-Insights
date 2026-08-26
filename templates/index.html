@@ -1,4 +1,4 @@
-<!-- Darsh Financial Dashboard: full-featured expense dashboard with Chart.js visualizations, KPI cards, and data management. -->
+<!-- Darsh Financial Dashboard: premium light finance dashboard with sage/green accents, Chart.js visualizations, and modular card layout. -->
 {% extends "base.html" %}
 {% block title %}Dashboard — Darsh Financial Dashboard{% endblock %}
 {% block content %}
@@ -6,32 +6,41 @@
 
   <!-- ===== SIDEBAR ===== -->
   <aside class="side-panel">
-    <div class="mb-8 flex items-center gap-2.5 px-1 pt-0.5">
+    <!-- Branding -->
+    <div class="mb-7 flex items-center gap-2.5 px-1">
       <span class="brand-mark" aria-hidden="true"></span>
-      <span class="text-[11px] font-extrabold leading-[1.1] tracking-[-0.02em] text-text-primary">Darsh<br/>Financial</span>
+      <span class="text-[12px] font-bold leading-[1.15] tracking-[-0.01em] text-ink">Darsh<br/>Financial</span>
     </div>
 
-    <nav class="space-y-4 flex-1" aria-label="Primary navigation">
+    <!-- Navigation -->
+    <nav class="flex-1 space-y-5" aria-label="Primary navigation">
       <section>
-        <p class="nav-heading px-2.5 pb-1.5">Main</p>
-        <button class="nav-item active"><span>⌂</span> Overview</button>
+        <p class="nav-heading">Main</p>
+        <button class="nav-item active"><i data-lucide="layout-dashboard" class="nav-icon"></i> Overview</button>
+        <button class="nav-item js-placeholder"><i data-lucide="arrow-down-left" class="nav-icon"></i> Transactions</button>
+        <button class="nav-item js-placeholder"><i data-lucide="bar-chart-3" class="nav-icon"></i> Analytics</button>
       </section>
       <section>
-        <p class="nav-heading px-2.5 pb-1.5">Actions</p>
-        <button id="sidebar-add" class="nav-item"><span>＋</span> Add Expense</button>
-        <button id="export-csv-sidebar" class="nav-item"><span>↓</span> Export CSV</button>
-        <button id="export-excel-sidebar" class="nav-item"><span>⬇</span> Export Excel</button>
+        <p class="nav-heading">Actions</p>
+        <button id="sidebar-add" class="nav-item"><i data-lucide="plus-circle" class="nav-icon"></i> Add Expense</button>
+        <button id="export-csv-sidebar" class="nav-item"><i data-lucide="file-text" class="nav-icon"></i> Export CSV</button>
+        <button id="export-excel-sidebar" class="nav-item"><i data-lucide="file-spreadsheet" class="nav-icon"></i> Export Excel</button>
+      </section>
+      <section>
+        <p class="nav-heading">Other</p>
+        <button class="nav-item js-placeholder"><i data-lucide="settings" class="nav-icon"></i> Settings</button>
       </section>
     </nav>
 
-    <div class="mt-auto pt-4 border-t border-glass-border">
+    <!-- User + Logout -->
+    <div class="mt-auto pt-4 border-t border-border">
       <div class="flex items-center gap-2.5 px-2.5 py-2">
-        <div class="h-8 w-8 grid place-items-center rounded-full bg-accent/20 text-[10px] font-extrabold text-accent-light">{{ user_name[:2]|upper }}</div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-[11px] font-bold text-text-primary">{{ user_name }}</p>
-        </div>
+        <div class="avatar-sm">{{ user_name[:2]|upper }}</div>
+        <p class="truncate text-[11px] font-semibold text-ink-2 flex-1 min-w-0">{{ user_name }}</p>
       </div>
-      <a href="{{ url_for('logout') }}" class="block mt-1 px-2.5 py-1.5 text-[10px] font-bold text-text-muted hover:text-danger transition-colors">⇥ Sign out</a>
+      <a href="{{ url_for('logout') }}" class="flex items-center gap-2 mt-1 px-2.5 py-1.5 text-[10px] font-semibold text-ink-4 hover:text-danger transition-colors rounded-lg hover:bg-danger-light">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign out
+      </a>
     </div>
   </aside>
 
@@ -41,15 +50,18 @@
     <!-- Header -->
     <header class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex min-w-0 items-center gap-3">
-        <div class="hidden h-9 w-9 place-items-center rounded-full bg-accent/15 text-[11px] font-extrabold text-accent-light sm:grid">{{ user_name[:2]|upper }}</div>
+        <div class="avatar hidden sm:grid">{{ user_name[:2]|upper }}</div>
         <div>
-          <p class="truncate text-[14px] font-extrabold tracking-[-0.03em] text-text-primary">Welcome back, {{ user_name }} <span class="text-success">●</span></p>
-          <p class="mt-0.5 text-[10px] font-medium text-text-muted">Your financial overview at a glance.</p>
+          <p class="text-[15px] font-bold tracking-[-0.02em] text-ink">Welcome back, {{ user_name }} 👋</p>
+          <p class="mt-0.5 text-[11px] font-medium text-ink-4">Here is your financial overview for today.</p>
         </div>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <input id="search-input" placeholder="Search expenses…" class="h-8 w-36 rounded-lg border border-glass-border bg-glass px-3 text-[11px] font-semibold text-text-primary outline-none placeholder:text-text-muted focus:ring-2 focus:ring-accent/40 transition-all" />
-        <select id="category-filter" class="h-8 rounded-lg border border-glass-border bg-glass px-2.5 text-[10px] font-bold text-text-secondary outline-none focus:ring-2 focus:ring-accent/40">
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon"></i>
+          <input id="search-input" placeholder="Search expenses…" class="search-input" />
+        </div>
+        <select id="category-filter" class="filter-select">
           <option value="">All Categories</option>
           <option>Food &amp; Dining</option>
           <option>Transport</option>
@@ -58,7 +70,7 @@
           <option>Entertainment</option>
           <option>Other</option>
         </select>
-        <select id="time-filter" class="h-8 rounded-lg border border-glass-border bg-glass px-2.5 text-[10px] font-bold text-text-secondary outline-none focus:ring-2 focus:ring-accent/40">
+        <select id="time-filter" class="filter-select">
           <option value="">All Time</option>
           <option value="this_month">This Month</option>
           <option value="last_month">Last Month</option>
@@ -66,114 +78,131 @@
           <option value="last_6">Last 6 Months</option>
           <option value="this_year">This Year</option>
         </select>
-        <button id="add-expense-button" class="primary-button h-8 px-3.5">＋ Add Expense</button>
+        <button id="add-expense-button" class="primary-button h-[34px] px-3.5 gap-1.5">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Expense
+        </button>
       </div>
     </header>
 
     <!-- ===== KPI CARDS ===== -->
-    <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-      <article class="kpi-card">
+    <section class="kpi-grid">
+      <article class="kpi-card kpi-featured">
+        <div class="kpi-icon-wrap kpi-icon-green"><i data-lucide="indian-rupee" class="w-4 h-4"></i></div>
         <p class="kpi-label">Total Spending</p>
         <p id="kpi-total" class="kpi-value">₹0</p>
         <p class="kpi-sub">All filtered expenses</p>
       </article>
-      <article class="kpi-card kpi-highlight">
+      <article class="kpi-card">
+        <div class="kpi-icon-wrap kpi-icon-blue"><i data-lucide="calendar" class="w-4 h-4"></i></div>
         <p class="kpi-label">This Month</p>
         <p id="kpi-month" class="kpi-value">₹0</p>
         <p class="kpi-sub">Current calendar month</p>
       </article>
       <article class="kpi-card">
+        <div class="kpi-icon-wrap kpi-icon-teal"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
         <p class="kpi-label">Avg. Expense</p>
         <p id="kpi-avg" class="kpi-value">₹0</p>
         <p class="kpi-sub">Per transaction</p>
       </article>
       <article class="kpi-card">
+        <div class="kpi-icon-wrap kpi-icon-purple"><i data-lucide="hash" class="w-4 h-4"></i></div>
         <p class="kpi-label">Transactions</p>
         <p id="kpi-count" class="kpi-value">0</p>
         <p class="kpi-sub">Total entries</p>
       </article>
       <article class="kpi-card">
+        <div class="kpi-icon-wrap kpi-icon-amber"><i data-lucide="arrow-up-circle" class="w-4 h-4"></i></div>
         <p class="kpi-label">Highest Expense</p>
         <p id="kpi-max" class="kpi-value">₹0</p>
         <p class="kpi-sub">Single transaction</p>
       </article>
       <article class="kpi-card">
+        <div class="kpi-icon-wrap kpi-icon-rose"><i data-lucide="tag" class="w-4 h-4"></i></div>
         <p class="kpi-label">Top Category</p>
         <p id="kpi-top-cat" class="kpi-value kpi-value-sm">—</p>
         <p class="kpi-sub">Highest spend area</p>
       </article>
     </section>
 
-    <!-- ===== CHARTS — ROW 1: LINE CHART ===== -->
-    <section class="mt-4">
-      <article class="chart-card">
-        <div class="flex items-center justify-between mb-4">
+    <!-- ===== CHARTS — ROW 1: SPENDING OVERVIEW ===== -->
+    <section class="mt-5">
+      <article class="dash-card">
+        <div class="dash-card-header">
           <div>
-            <p class="chart-label">Monthly Spending Trend</p>
-            <p class="text-[10px] text-text-muted mt-0.5">Aggregated by month</p>
+            <p class="dash-card-title">Monthly Spending Trend</p>
+            <p class="dash-card-subtitle">Aggregated spending by month</p>
           </div>
         </div>
         <div class="chart-container" style="height:260px;">
           <canvas id="line-chart"></canvas>
         </div>
-        <p id="line-empty" class="chart-empty hidden">No spending data yet. Add your first expense to see trends.</p>
+        <p id="line-empty" class="chart-empty hidden">
+          <i data-lucide="trending-up" class="w-8 h-8 text-ink-4 mb-2 mx-auto block opacity-40"></i>
+          No spending data yet. Add your first expense to see trends.
+        </p>
       </article>
     </section>
 
     <!-- ===== CHARTS — ROW 2: DOUGHNUT + BAR ===== -->
     <section class="mt-4 grid gap-4 lg:grid-cols-2">
-      <article class="chart-card">
-        <div class="flex items-center justify-between mb-4">
+      <article class="dash-card">
+        <div class="dash-card-header">
           <div>
-            <p class="chart-label">Spending Distribution</p>
-            <p class="text-[10px] text-text-muted mt-0.5">By category</p>
+            <p class="dash-card-title">Spending Distribution</p>
+            <p class="dash-card-subtitle">By category</p>
           </div>
         </div>
         <div class="chart-container chart-container-sq">
           <canvas id="doughnut-chart"></canvas>
         </div>
-        <p id="doughnut-empty" class="chart-empty hidden">No category data available.</p>
+        <p id="doughnut-empty" class="chart-empty hidden">
+          <i data-lucide="pie-chart" class="w-8 h-8 text-ink-4 mb-2 mx-auto block opacity-40"></i>
+          No category data available.
+        </p>
       </article>
-      <article class="chart-card">
-        <div class="flex items-center justify-between mb-4">
+      <article class="dash-card">
+        <div class="dash-card-header">
           <div>
-            <p class="chart-label">Category Comparison</p>
-            <p class="text-[10px] text-text-muted mt-0.5">Side-by-side breakdown</p>
+            <p class="dash-card-title">Category Comparison</p>
+            <p class="dash-card-subtitle">Side-by-side breakdown</p>
           </div>
         </div>
         <div class="chart-container" style="height:280px;">
           <canvas id="bar-chart"></canvas>
         </div>
-        <p id="bar-empty" class="chart-empty hidden">No category data available.</p>
+        <p id="bar-empty" class="chart-empty hidden">
+          <i data-lucide="bar-chart-3" class="w-8 h-8 text-ink-4 mb-2 mx-auto block opacity-40"></i>
+          No category data available.
+        </p>
       </article>
     </section>
 
     <!-- ===== RECENT TRANSACTIONS ===== -->
     <section class="mt-4">
-      <article class="chart-card">
-        <div class="flex items-center justify-between mb-3">
+      <article class="dash-card">
+        <div class="dash-card-header">
           <div>
-            <p class="chart-label">Recent Transactions</p>
-            <p class="text-[10px] text-text-muted mt-0.5">Latest 5 entries</p>
+            <p class="dash-card-title">Recent Transactions</p>
+            <p class="dash-card-subtitle">Latest 5 entries</p>
           </div>
-          <button id="clear-search" class="text-[10px] font-bold text-accent hover:text-accent-light transition-colors">Clear filters</button>
+          <button id="clear-search" class="text-[10px] font-bold text-accent hover:text-accent-dark transition-colors">Clear filters</button>
         </div>
-        <div id="recent-transactions" class="divide-y divide-glass-border"></div>
+        <div id="recent-transactions" class="divide-y divide-border"></div>
       </article>
     </section>
 
     <!-- ===== FULL EXPENSE TABLE ===== -->
-    <section class="chart-card mt-4 overflow-visible">
-      <div class="flex flex-col justify-between gap-3 border-b border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:px-5">
+    <section class="dash-card mt-4 overflow-visible">
+      <div class="dash-card-header border-b border-border px-5 py-4">
         <div>
-          <p class="chart-label">All Transactions</p>
-          <p class="text-[10px] text-text-muted mt-0.5">Complete expense ledger</p>
+          <p class="dash-card-title">All Transactions</p>
+          <p class="dash-card-subtitle">Complete expense ledger</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <span id="entry-count" class="rounded-full bg-glass-light border border-glass-border px-2.5 py-1.5 text-[10px] font-bold text-text-secondary">0 entries</span>
-          <span id="average-spend" class="rounded-full bg-accent/15 px-2.5 py-1.5 text-[10px] font-extrabold text-accent-light">Avg. ₹0</span>
-          <button id="sort-date" class="soft-button h-7 px-2.5 text-[9px]">Sort: Date ↕</button>
-          <button id="sort-amount" class="soft-button h-7 px-2.5 text-[9px]">Sort: Amount ↕</button>
+          <span id="entry-count" class="badge">0 entries</span>
+          <span id="average-spend" class="badge badge-accent">Avg. ₹0</span>
+          <button id="sort-date" class="sort-btn">Date ↕</button>
+          <button id="sort-amount" class="sort-btn">Amount ↕</button>
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -195,14 +224,14 @@
 
     <!-- ===== EXPORT BAR ===== -->
     <section class="mt-4 flex items-center justify-between gap-3 flex-wrap">
-      <p class="text-[10px] font-semibold text-text-muted">Darsh Financial Dashboard stores every transaction in your own SQLite database.</p>
+      <p class="text-[10px] font-medium text-ink-4">Darsh Financial Dashboard — all data stored in your local SQLite database.</p>
       <div class="flex items-center gap-2">
-        <button id="export-csv" class="soft-button h-8 px-3.5">↓ Export CSV</button>
-        <button id="export-excel" class="primary-button h-8 px-3.5">⬇ Export Excel</button>
+        <button id="export-csv" class="soft-button"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Export CSV</button>
+        <button id="export-excel" class="primary-button h-[34px] px-3.5 gap-1.5"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel</button>
       </div>
     </section>
 
-    <footer class="px-1 py-4 text-[9px] font-semibold text-text-muted">
+    <footer class="px-1 py-5 text-[9px] font-medium text-ink-4">
       © Darsh Financial Dashboard · Built with Flask, SQLite, Chart.js & Tailwind CSS
     </footer>
   </main>
@@ -210,9 +239,17 @@
 
 <!-- ===== MOBILE NAV ===== -->
 <nav class="mobile-nav">
-  <button>⌂<br/>Overview</button>
-  <button id="mobile-add" class="rounded-full bg-accent px-4 py-2 text-surface-900 font-extrabold">＋</button>
-  <button id="mobile-export" class="text-text-muted">↓<br/>Export</button>
+  <button>
+    <i data-lucide="layout-dashboard" class="w-4 h-4 mx-auto mb-0.5"></i>
+    Overview
+  </button>
+  <button id="mobile-add" class="mobile-add-btn">
+    <i data-lucide="plus" class="w-5 h-5"></i>
+  </button>
+  <button id="mobile-export">
+    <i data-lucide="download" class="w-4 h-4 mx-auto mb-0.5"></i>
+    Export
+  </button>
 </nav>
 
 <!-- ===== TOAST ===== -->
@@ -223,13 +260,15 @@
   <div class="modal">
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-[10px] font-extrabold uppercase tracking-[0.1em] text-text-muted">Expense</p>
-        <h2 id="modal-title" class="mt-1 font-display text-[28px] font-bold tracking-[-0.035em] text-text-primary">Add an expense</h2>
-        <p class="mt-1 text-[10px] font-medium text-text-muted">It will update your dashboard instantly.</p>
+        <p class="text-[9px] font-bold uppercase tracking-[0.1em] text-ink-4">Expense</p>
+        <h2 id="modal-title" class="mt-1 text-[24px] font-extrabold tracking-[-0.03em] text-ink">Add an expense</h2>
+        <p class="mt-1 text-[11px] font-medium text-ink-4">It will update your dashboard instantly.</p>
       </div>
-      <button id="close-modal" class="text-lg text-text-muted hover:text-danger transition-colors" aria-label="Close">×</button>
+      <button id="close-modal" class="w-8 h-8 grid place-items-center rounded-lg text-ink-4 hover:text-danger hover:bg-danger-light transition-colors" aria-label="Close">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
     </div>
-    <form id="expense-form" class="mt-5 grid gap-3">
+    <form id="expense-form" class="mt-5 grid gap-3.5">
       <input type="hidden" id="expense-id" value="" />
       <label class="grid gap-1.5">
         <span class="field-label">Description</span>
@@ -261,8 +300,8 @@
         </select>
       </label>
       <div class="mt-2 flex justify-end gap-2">
-        <button id="cancel-modal" type="button" class="soft-button h-9 px-3">Cancel</button>
-        <button type="submit" class="primary-button h-9 px-3.5" id="modal-submit">＋ Save expense</button>
+        <button id="cancel-modal" type="button" class="soft-button h-9 px-4">Cancel</button>
+        <button type="submit" class="primary-button h-9 px-4" id="modal-submit"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Save expense</button>
       </div>
     </form>
   </div>

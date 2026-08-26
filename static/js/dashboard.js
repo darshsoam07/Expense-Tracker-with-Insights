@@ -3,17 +3,17 @@
 const categories = ['Food & Dining', 'Transport', 'Shopping', 'Bills & Utilities', 'Entertainment', 'Other'];
 
 const categoryStyle = {
-  'Food & Dining':      { icon: '♨', bg: 'rgba(251,146,60,.15)',  color: '#fb923c' },
-  'Transport':          { icon: '⌁', bg: 'rgba(129,140,248,.15)', color: '#818cf8' },
-  'Shopping':           { icon: '▢', bg: 'rgba(52,211,153,.15)',   color: '#34d399' },
-  'Bills & Utilities':  { icon: 'ϟ', bg: 'rgba(250,204,21,.15)',  color: '#facc15' },
-  'Entertainment':      { icon: '✦', bg: 'rgba(244,114,182,.15)', color: '#f472b6' },
-  'Other':              { icon: '…', bg: 'rgba(148,163,184,.15)', color: '#94a3b8' },
+  'Food & Dining':      { icon: '♨', bg: '#DDF2E1', color: '#1F8F45' },
+  'Transport':          { icon: '⌁', bg: '#EFF5EE', color: '#3A4A3E' },
+  'Shopping':           { icon: '▢', bg: '#E4F4E7', color: '#2E9B52' },
+  'Bills & Utilities':  { icon: 'ϟ', bg: '#FEF3C7', color: '#D97706' },
+  'Entertainment':      { icon: '✦', bg: '#EDE9FE', color: '#7C3AED' },
+  'Other':              { icon: '…', bg: '#F1F5F1', color: '#758078' },
 };
 
-/* Chart.js color palette */
-const chartColors = ['#818cf8', '#34d399', '#fb923c', '#facc15', '#f472b6', '#94a3b8'];
-const chartColorsBg = ['rgba(129,140,248,.7)', 'rgba(52,211,153,.7)', 'rgba(251,146,60,.7)', 'rgba(250,204,21,.7)', 'rgba(244,114,182,.7)', 'rgba(148,163,184,.7)'];
+/* Coordinated natural sage/green/neutral palette */
+const chartColors = ['#1F8F45', '#2E9B52', '#52B774', '#7EC98E', '#A0B5A5', '#758078'];
+const chartColorsBg = ['rgba(31,143,69,0.85)', 'rgba(46,155,82,0.85)', 'rgba(82,183,116,0.85)', 'rgba(126,201,142,0.85)', 'rgba(160,181,165,0.85)', 'rgba(117,128,120,0.85)'];
 
 let expenses = [];
 let sortField = 'date';
@@ -33,6 +33,7 @@ let barChart = null;
 /* ===== Toast ===== */
 function notify(message) {
   const toast = byId('toast');
+  if (!toast) return;
   toast.textContent = message;
   toast.classList.add('show');
   clearTimeout(notify.timer);
@@ -42,9 +43,9 @@ function notify(message) {
 /* ===== Build query string from current filters ===== */
 function buildQueryString() {
   const params = new URLSearchParams();
-  const period = byId('time-filter').value;
-  const category = byId('category-filter').value;
-  const search = byId('search-input').value.trim();
+  const period = byId('time-filter') ? byId('time-filter').value : '';
+  const category = byId('category-filter') ? byId('category-filter').value : '';
+  const search = byId('search-input') ? byId('search-input').value.trim() : '';
   if (period) params.set('period', period);
   if (category) params.set('category', category);
   if (search) params.set('search', search);
@@ -73,6 +74,9 @@ async function refreshDashboard() {
     renderBarChart(summary.category_totals);
     renderRecent(expenses.slice(0, 5));
     renderLedger();
+    if (window.lucide) {
+      lucide.createIcons();
+    }
   } catch (err) {
     console.error(err);
     notify(err.message || 'Failed to load data.');
@@ -92,10 +96,10 @@ function renderKPIs(s) {
 }
 
 /* ===== Chart.js Global Defaults ===== */
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.color = '#758078';
+Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
 Chart.defaults.font.size = 11;
-Chart.defaults.font.weight = 600;
+Chart.defaults.font.weight = 500;
 
 /* ===== Line Chart ===== */
 function renderLineChart(monthlyTotals) {
@@ -126,14 +130,14 @@ function renderLineChart(monthlyTotals) {
       datasets: [{
         label: 'Monthly Spending (₹)',
         data: data,
-        borderColor: '#818cf8',
-        backgroundColor: 'rgba(129,140,248,.12)',
-        borderWidth: 2.5,
-        pointBackgroundColor: '#818cf8',
-        pointBorderColor: '#1e293b',
+        borderColor: '#1F8F45',
+        backgroundColor: 'rgba(31, 143, 69, 0.07)',
+        borderWidth: 2.2,
+        pointBackgroundColor: '#1F8F45',
+        pointBorderColor: '#FFFFFF',
         pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        pointRadius: 4.5,
+        pointHoverRadius: 6.5,
         fill: true,
         tension: 0.35,
       }],
@@ -144,12 +148,13 @@ function renderLineChart(monthlyTotals) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e293b',
-          borderColor: 'rgba(148,163,184,.2)',
+          backgroundColor: '#172019',
+          borderColor: '#E4EAE3',
           borderWidth: 1,
-          titleColor: '#e2e8f0',
-          bodyColor: '#f1f5f9',
-          padding: 12,
+          titleColor: '#FFFFFF',
+          bodyColor: '#DDF2E1',
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
             label: (ctx) => ` ${money.format(ctx.parsed.y)}`,
           },
@@ -157,13 +162,13 @@ function renderLineChart(monthlyTotals) {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(148,163,184,.06)' },
-          ticks: { color: '#64748b', font: { size: 10 } },
+          grid: { color: 'rgba(228, 234, 227, 0.6)' },
+          ticks: { color: '#758078', font: { size: 10 } },
         },
         y: {
-          grid: { color: 'rgba(148,163,184,.06)' },
+          grid: { color: 'rgba(228, 234, 227, 0.6)' },
           ticks: {
-            color: '#64748b',
+            color: '#758078',
             font: { size: 10 },
             callback: (v) => money.format(v),
           },
@@ -208,28 +213,29 @@ function renderDoughnutChart(categoryTotals) {
       datasets: [{
         data: data,
         backgroundColor: colors,
-        borderColor: borderColors,
-        borderWidth: 2,
+        borderColor: '#FFFFFF',
+        borderWidth: 2.5,
         hoverBorderWidth: 3,
-        hoverOffset: 8,
+        hoverOffset: 6,
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '62%',
+      cutout: '64%',
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 10, weight: 700 } },
+          labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', font: { size: 10, weight: 600 }, color: '#3A4A3E' },
         },
         tooltip: {
-          backgroundColor: '#1e293b',
-          borderColor: 'rgba(148,163,184,.2)',
+          backgroundColor: '#172019',
+          borderColor: '#E4EAE3',
           borderWidth: 1,
-          titleColor: '#e2e8f0',
-          bodyColor: '#f1f5f9',
-          padding: 12,
+          titleColor: '#FFFFFF',
+          bodyColor: '#DDF2E1',
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
             label: (ctx) => {
               const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
@@ -277,8 +283,8 @@ function renderBarChart(categoryTotals) {
         data: data,
         backgroundColor: bgColors,
         borderColor: brColors,
-        borderWidth: 1.5,
-        borderRadius: 6,
+        borderWidth: 1,
+        borderRadius: 8,
         hoverBackgroundColor: brColors,
       }],
     },
@@ -288,12 +294,13 @@ function renderBarChart(categoryTotals) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e293b',
-          borderColor: 'rgba(148,163,184,.2)',
+          backgroundColor: '#172019',
+          borderColor: '#E4EAE3',
           borderWidth: 1,
-          titleColor: '#e2e8f0',
-          bodyColor: '#f1f5f9',
-          padding: 12,
+          titleColor: '#FFFFFF',
+          bodyColor: '#DDF2E1',
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
             label: (ctx) => ` ${money.format(ctx.parsed.y)}`,
           },
@@ -302,12 +309,12 @@ function renderBarChart(categoryTotals) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { color: '#64748b', font: { size: 10 } },
+          ticks: { color: '#758078', font: { size: 10 } },
         },
         y: {
-          grid: { color: 'rgba(148,163,184,.06)' },
+          grid: { color: 'rgba(228, 234, 227, 0.6)' },
           ticks: {
-            color: '#64748b',
+            color: '#758078',
             font: { size: 10 },
             callback: (v) => money.format(v),
           },
@@ -334,10 +341,10 @@ function renderRecent(items) {
     return `<div class="recent-row">
       <span class="recent-icon" style="background:${s.bg};color:${s.color}">${s.icon}</span>
       <div class="min-w-0 flex-1">
-        <p class="truncate text-[11px] font-bold text-text-primary">${escapeHTML(e.description)}</p>
-        <p class="mt-0.5 text-[9px] font-medium text-text-muted">${escapeHTML(e.merchant)} · ${dateLabel(e.date)}</p>
+        <p class="truncate text-[12px] font-bold text-ink">${escapeHTML(e.description)}</p>
+        <p class="mt-0.5 text-[10px] font-medium text-ink-3">${escapeHTML(e.merchant)} · ${dateLabel(e.date)}</p>
       </div>
-      <span class="text-[11px] font-extrabold text-danger">−${money.format(e.amount)}</span>
+      <span class="text-[12px] font-bold text-danger">−${money.format(e.amount)}</span>
     </div>`;
   }).join('');
 }
@@ -357,29 +364,34 @@ function renderLedger() {
   byId('ledger-body').innerHTML = sorted.length ? sorted.map(e => {
     const s = categoryStyle[e.category] || categoryStyle['Other'];
     return `<tr>
-      <td class="text-[10px] font-semibold text-text-muted">${dateLabel(e.date)}</td>
-      <td><p class="text-[11px] font-bold text-text-primary">${escapeHTML(e.description)}</p></td>
-      <td class="text-[10px] text-text-secondary">${escapeHTML(e.merchant)}</td>
+      <td class="text-[11px] font-medium text-ink-3">${dateLabel(e.date)}</td>
+      <td><p class="text-[12px] font-semibold text-ink">${escapeHTML(e.description)}</p></td>
+      <td class="text-[11px] text-ink-3">${escapeHTML(e.merchant)}</td>
       <td><span class="cat-badge" style="background:${s.bg};color:${s.color}">${e.category}</span></td>
-      <td class="money-cell text-right text-[11px] font-extrabold text-danger">−${preciseMoney.format(e.amount)}</td>
+      <td class="money-cell text-right text-[12px] font-bold text-danger">−${preciseMoney.format(e.amount)}</td>
       <td class="text-right whitespace-nowrap">
-        <button data-edit="${e.id}" class="row-action row-action-edit" aria-label="Edit" title="Edit">✎</button>
-        <button data-delete="${e.id}" class="row-action row-action-delete" aria-label="Delete" title="Delete">✕</button>
+        <button data-edit="${e.id}" class="row-action row-action-edit" aria-label="Edit" title="Edit">
+          <i data-lucide="pencil" class="w-3.5 h-3.5 inline"></i>
+        </button>
+        <button data-delete="${e.id}" class="row-action row-action-delete" aria-label="Delete" title="Delete">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5 inline"></i>
+        </button>
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="6" class="px-5 py-12 text-center text-[11px] font-semibold text-text-muted">No expenses match this view. Try adjusting the filters or add your first expense.</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="px-5 py-12 text-center text-[11px] font-semibold text-ink-4">No expenses match this view. Try adjusting the filters or add your first expense.</td></tr>';
 }
 
 /* ===== Modal ===== */
 function toggleModal(open, editData) {
   const modal = byId('expense-modal');
+  if (!modal) return;
   modal.classList.toggle('hidden', !open);
   modal.setAttribute('aria-hidden', String(!open));
 
   if (open) {
     if (editData) {
       byId('modal-title').textContent = 'Edit expense';
-      byId('modal-submit').textContent = '✓ Update expense';
+      byId('modal-submit').innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 inline"></i> Update expense';
       byId('expense-id').value = editData.id;
       byId('expense-description').value = editData.description;
       byId('expense-merchant').value = editData.merchant;
@@ -388,11 +400,12 @@ function toggleModal(open, editData) {
       byId('expense-category').value = editData.category;
     } else {
       byId('modal-title').textContent = 'Add an expense';
-      byId('modal-submit').textContent = '＋ Save expense';
+      byId('modal-submit').innerHTML = '<i data-lucide="plus" class="w-3.5 h-3.5 inline"></i> Save expense';
       byId('expense-id').value = '';
       byId('expense-form').reset();
       byId('expense-date').value = new Date().toISOString().slice(0, 10);
     }
+    if (window.lucide) lucide.createIcons();
     byId('expense-description').focus();
   }
 }
@@ -471,43 +484,57 @@ function exportExcel() {
 
 /* ===== Init ===== */
 document.addEventListener('DOMContentLoaded', async () => {
-  byId('expense-date').value = new Date().toISOString().slice(0, 10);
+  if (byId('expense-date')) {
+    byId('expense-date').value = new Date().toISOString().slice(0, 10);
+  }
 
   /* Filters — all trigger a full server-side refresh */
-  byId('category-filter').addEventListener('change', refreshDashboard);
-  byId('time-filter').addEventListener('change', refreshDashboard);
+  if (byId('category-filter')) {
+    byId('category-filter').addEventListener('change', refreshDashboard);
+  }
+  if (byId('time-filter')) {
+    byId('time-filter').addEventListener('change', refreshDashboard);
+  }
 
   let searchDebounce;
-  byId('search-input').addEventListener('input', () => {
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(refreshDashboard, 300);
-  });
+  if (byId('search-input')) {
+    byId('search-input').addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(refreshDashboard, 300);
+    });
+  }
 
-  byId('clear-search').addEventListener('click', () => {
-    byId('search-input').value = '';
-    byId('category-filter').value = '';
-    byId('time-filter').value = '';
-    refreshDashboard();
-  });
+  if (byId('clear-search')) {
+    byId('clear-search').addEventListener('click', () => {
+      if (byId('search-input')) byId('search-input').value = '';
+      if (byId('category-filter')) byId('category-filter').value = '';
+      if (byId('time-filter')) byId('time-filter').value = '';
+      refreshDashboard();
+    });
+  }
 
   /* Sort buttons */
-  byId('sort-date').addEventListener('click', () => {
-    if (sortField === 'date') sortAsc = !sortAsc; else { sortField = 'date'; sortAsc = false; }
-    renderLedger();
-  });
-  byId('sort-amount').addEventListener('click', () => {
-    if (sortField === 'amount') sortAsc = !sortAsc; else { sortField = 'amount'; sortAsc = false; }
-    renderLedger();
-  });
+  if (byId('sort-date')) {
+    byId('sort-date').addEventListener('click', () => {
+      if (sortField === 'date') sortAsc = !sortAsc; else { sortField = 'date'; sortAsc = false; }
+      renderLedger();
+    });
+  }
+  if (byId('sort-amount')) {
+    byId('sort-amount').addEventListener('click', () => {
+      if (sortField === 'amount') sortAsc = !sortAsc; else { sortField = 'amount'; sortAsc = false; }
+      renderLedger();
+    });
+  }
 
   /* Modal triggers */
   ['add-expense-button', 'sidebar-add', 'mobile-add'].forEach(id => {
     const el = byId(id);
     if (el) el.addEventListener('click', () => toggleModal(true));
   });
-  byId('close-modal').addEventListener('click', () => toggleModal(false));
-  byId('cancel-modal').addEventListener('click', () => toggleModal(false));
-  byId('expense-form').addEventListener('submit', saveExpense);
+  if (byId('close-modal')) byId('close-modal').addEventListener('click', () => toggleModal(false));
+  if (byId('cancel-modal')) byId('cancel-modal').addEventListener('click', () => toggleModal(false));
+  if (byId('expense-form')) byId('expense-form').addEventListener('submit', saveExpense);
 
   /* Export triggers */
   ['export-csv', 'export-csv-sidebar'].forEach(id => {
@@ -522,13 +549,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (mobileExport) mobileExport.addEventListener('click', exportCSV);
 
   /* Table delegation for edit / delete */
-  byId('ledger-body').addEventListener('click', (event) => {
-    const editBtn = event.target.closest('[data-edit]');
-    if (editBtn) { editExpense(Number(editBtn.dataset.edit)); return; }
-    const delBtn = event.target.closest('[data-delete]');
-    if (delBtn) removeExpense(delBtn.dataset.delete);
+  if (byId('ledger-body')) {
+    byId('ledger-body').addEventListener('click', (event) => {
+      const editBtn = event.target.closest('[data-edit]');
+      if (editBtn) { editExpense(Number(editBtn.dataset.edit)); return; }
+      const delBtn = event.target.closest('[data-delete]');
+      if (delBtn) removeExpense(delBtn.dataset.delete);
+    });
+  }
+
+  /* Placeholder notices */
+  document.querySelectorAll('.js-placeholder').forEach(btn => {
+    btn.addEventListener('click', () => notify('This view is connected to the primary overview.'));
   });
 
   /* Initial load */
-  try { await refreshDashboard(); } catch (err) { notify(err.message); }
+  try {
+    await refreshDashboard();
+  } catch (err) {
+    notify(err.message);
+  }
 });
