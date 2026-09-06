@@ -1,9 +1,10 @@
 # 💰 Darsh Financial Dashboard
 
-A full-featured personal finance dashboard for tracking expenses, visualizing spending habits, and exporting financial reports — built with **Flask, SQLite, Chart.js, and Tailwind CSS**. No React, no Node build pipeline, no external database. Just a clean Python backend and a premium dark-themed UI.
+A full-featured personal finance dashboard for tracking expenses, visualizing spending habits, and exporting financial reports — built with **Flask, SQLite, Chart.js, and Tailwind CSS**, and fully containerized with **Docker**. No React, no Node build pipeline, no external database. Just a clean Python backend and a premium dark-themed UI.
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-07405E?logo=sqlite&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
@@ -16,7 +17,8 @@ A full-featured personal finance dashboard for tracking expenses, visualizing sp
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Screenshots](#screenshots)
-- [Getting Started](#getting-started)
+- [Quick Start with Docker](#quick-start-with-docker)
+- [Local Setup Without Docker](#local-setup-without-docker)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Project Structure](#project-structure)
@@ -29,12 +31,13 @@ A full-featured personal finance dashboard for tracking expenses, visualizing sp
 
 ## Overview
 
-Darsh Financial Dashboard is a self-hosted expense tracker designed for individuals who want clear visibility into their spending without handing their data to a third-party service. Every user's expenses are stored locally in SQLite, scoped strictly to their account, and visualized through interactive charts and KPI cards on a responsive, mobile-friendly dashboard.
+Darsh Financial Dashboard is a self-hosted expense tracker designed for individuals who want clear visibility into their spending without handing their data to a third-party service. Every user's expenses are stored locally in SQLite, scoped strictly to their account, and visualized through interactive charts and KPI cards on a responsive, mobile-friendly dashboard. The app is packaged as a Docker image, so it runs the same way on any machine with Docker installed — no local Python setup required.
 
 | Capability | Implementation |
 |---|---|
+| Containerization | Docker + Docker Compose, single-command startup |
 | User accounts | Flask sessions + Werkzeug password hashing |
-| Persistent data | SQLite database at `instance/expenses.db` |
+| Persistent data | SQLite, persisted via a named Docker volume |
 | Expense management | Full CRUD via a JSON API |
 | Financial KPIs | Server-calculated totals, averages, and breakdowns |
 | Interactive charts | Chart.js — line, doughnut, and bar charts |
@@ -56,17 +59,19 @@ Darsh Financial Dashboard is a self-hosted expense tracker designed for individu
 - 📑 **Excel Export** — Download all expenses as a professionally formatted `.xlsx` file
 - 📱 **Responsive Design** — Mobile-friendly, with a bottom navigation bar
 - 🌙 **Dark Theme** — Premium slate/indigo interface with a glassmorphism aesthetic
+- 🐳 **Containerized** — Runs identically anywhere with a single `docker compose up`
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Backend | Python, Flask |
+| Backend | Python 3.12, Flask |
 | Database | SQLite |
 | Frontend | HTML / Jinja2, Tailwind CSS (CDN), vanilla JavaScript |
 | Charts | Chart.js (CDN) |
 | Excel export | openpyxl |
 | Auth | Werkzeug security (password hashing) |
+| Containerization | Docker, Docker Compose |
 
 ## Screenshots
 
@@ -77,14 +82,61 @@ Darsh Financial Dashboard is a self-hosted expense tracker designed for individu
 ![Expense Table](docs/screenshot-expenses.png)
 ```
 
-## Getting Started
+## Quick Start with Docker
 
-### Prerequisites
+This is the recommended way to run the project — it requires only [Docker](https://docs.docker.com/get-docker/) installed, nothing else.
 
-- Python 3.9 or later
-- `pip`
+```bash
+# 1. Clone the repository
+git clone https://github.com/<your-username>/darsh-financial-dashboard.git
+cd darsh-financial-dashboard
 
-### Installation
+# 2. Build and start the container
+docker compose up --build
+```
+
+Open **`http://localhost:4949`**, create an account, and start tracking your expenses.
+
+The SQLite database is persisted in the named Docker volume `expense_data`, so your data survives container restarts and rebuilds.
+
+**Common commands:**
+
+```bash
+# Run in the background
+docker compose up --build -d
+
+# View logs
+docker compose logs -f
+
+# Stop the container
+docker compose down
+
+# Stop and also wipe the persisted database
+docker compose down -v
+```
+
+**Without docker-compose:**
+
+```bash
+docker build -t darsh-financial-dashboard .
+
+docker run -d \
+  --name expense-tracker \
+  -p 4949:4949 \
+  -e FLASK_SECRET_KEY="change-this-to-a-strong-secret-key" \
+  -v expense_data:/app/instance \
+  darsh-financial-dashboard
+```
+
+> ⚠️ **Before deploying anywhere beyond your own machine:**
+> 1. Override `FLASK_SECRET_KEY` in `docker-compose.yml` with a real, random secret — Flask uses it to sign session cookies. Generate one with `python3 -c "import secrets; print(secrets.token_hex(32))"`.
+> 2. The current image runs `app.py` directly, which starts Flask in debug mode. That's fine for local use, but swap the `CMD` in the `Dockerfile` for a production WSGI server (e.g. `gunicorn --bind 0.0.0.0:4949 app:app`) before exposing this to the internet.
+
+## Local Setup Without Docker
+
+Prefer running it directly with Python? That works too.
+
+**Prerequisites:** Python 3.9+ and `pip`
 
 ```bash
 # 1. Clone the repository
@@ -93,12 +145,8 @@ cd darsh-financial-dashboard
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
-
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows
-.venv\Scripts\activate
+source .venv/bin/activate      # macOS / Linux
+.venv\Scripts\activate         # Windows
 
 # 3. Install dependencies
 pip install -r requirements.txt
@@ -107,19 +155,13 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The app starts on **`http://127.0.0.1:4949`**. Open it in your browser, create an account, and start tracking your expenses. The SQLite database is created automatically at `instance/expenses.db` on first run.
+The app starts on **`http://127.0.0.1:4949`**, and the SQLite database is created automatically at `instance/expenses.db` on first run.
 
 ## Configuration
 
-Set a strong secret key before deploying publicly — Flask sessions rely on it for signing cookies:
-
-```bash
-export FLASK_SECRET_KEY="your-strong-random-key"
-```
-
 | Variable | Required | Description |
 |---|---|---|
-| `FLASK_SECRET_KEY` | Recommended for production | Secret key used to sign session cookies. Falls back to an insecure development default if unset. |
+| `FLASK_SECRET_KEY` | Recommended for production | Secret key used to sign session cookies. Set it in `docker-compose.yml` (or your shell, for the non-Docker setup). Falls back to an insecure development default if unset. |
 
 ## API Reference
 
@@ -155,6 +197,9 @@ curl -X POST http://127.0.0.1:4949/api/expenses \
 Expense-Tracker-with-Insights/
 ├── app.py                  # Flask app: routes, auth, CRUD API, KPI/summary logic, Excel export
 ├── requirements.txt        # Python dependencies (Flask, openpyxl)
+├── Dockerfile              # Container image definition (python:3.12-slim base)
+├── docker-compose.yml      # One-command startup with a named, persisted volume
+├── .dockerignore           # Files excluded from the Docker build context
 ├── static/
 │   ├── css/
 │   │   └── app.css         # Custom theme and styling
@@ -177,4 +222,4 @@ Expense-Tracker-with-Insights/
 - Edit and delete operations verify ownership with `WHERE id = ? AND user_id = ?`
 - Excel and CSV exports only ever include the current user's data
 - All SQL queries are parameterized to prevent injection
-
+- Container runs the app in an isolated environment with only the required dependencies installed
