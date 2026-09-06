@@ -1,0 +1,14 @@
+services:
+  expense-tracker:
+    build: .
+    container_name: expense-tracker
+    ports:
+      - "4949:4949"
+    environment:
+      FLASK_SECRET_KEY: "change-this-to-a-strong-secret-key"
+    volumes:
+      - expense_data:/app/instance
+    restart: unless-stopped
+
+volumes:
+  expense_data:
