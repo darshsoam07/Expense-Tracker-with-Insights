@@ -6,10 +6,12 @@ from datetime import datetime, date
 from functools import wraps
 from pathlib import Path
 
+# pyrefly: ignore [missing-import]
 from flask import (
-    Flask, jsonify, redirect, render_template, request,
+ Flask, jsonify, redirect, render_template, request,
     send_file, session, url_for,
 )
+# pyrefly: ignore [missing-import]
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
