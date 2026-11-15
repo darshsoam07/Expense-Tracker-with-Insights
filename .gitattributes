@@ -1,0 +1,10 @@
+# Normalise line endings (important on Windows): Git stores LF, checks out per platform.
+* text=auto
+
+# Shell scripts must stay LF even on Windows or they break in Git Bash/WSL/Linux.
+*.sh text eol=lf
+
+# Never treat these as text.
+*.png binary
+*.jpg binary
+*.ico binary
