@@ -8,8 +8,8 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | **Phase 1, PR 1 of 5** (repository relocation and documentation) |
-| New application (FastAPI, React, PostgreSQL) | **Not started.** No new application code exists yet |
+| Phase | **Phase 1, PR 2 of 5** (backend skeleton and minimal CI) |
+| New application | **Backend skeleton only** (FastAPI: configuration, logging, errors, health endpoints). No database, login, or banking features yet. No frontend yet |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
 
@@ -19,6 +19,8 @@ LedgerOps evolves an earlier Flask expense-tracker project. The old app is kept 
 
 ```
 legacy/expense-tracker/   Original Flask + SQLite app, byte-identical to tag legacy-v1
+backend/                  New FastAPI backend (see backend/README.md)
+.github/workflows/        CI: lint, types, architecture rules, tests
 docs/architecture/        Phase 0 audit, Phase 1 plan, architecture decision records
 docs/legacy-migration.md  How the relocation was done and verified
 scripts/                  Cross-platform (Python) verification scripts
@@ -30,6 +32,10 @@ scripts/                  Cross-platform (Python) verification scripts
 - [Phase 1 plan](docs/architecture/phase1-plan.md): approved plan for the foundation
 - [Architecture decision records](docs/architecture/adr/): why each major decision was made
 - [Legacy migration record](docs/legacy-migration.md): relocation, verification, Docker instructions
+
+## Running the new backend
+
+See [`backend/README.md`](backend/README.md) for setup, run and test commands (PowerShell and Git Bash).
 
 ## Running the legacy app locally
 
