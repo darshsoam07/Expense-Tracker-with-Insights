@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledgerops-backend"
+version = "0.1.0"
+description = "LedgerOps backend API (simulated banking platform; synthetic data only)"
+requires-python = ">=3.12"
+# Direct dependencies are pinned exactly. constraints.txt pins everything else.
+dependencies = [
+    "fastapi==0.163.1",
+    "uvicorn==0.54.0",
+    "pydantic-settings==2.16.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.2.0",
+    "pytest-cov==7.1.0",
+    "httpx2==2.16.0",
+    "ruff==0.17.5",
+    "mypy==2.4.1",
+    "import-linter==2.16",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["."]
+
+[tool.ruff.lint]
+# E/W/F: pycodestyle + pyflakes, I: import order, B: bugbear, UP: modern syntax,
+# S: security (bandit), PT: pytest style, SIM: simplifications, C4: comprehensions, RUF: misc.
+select = ["E", "W", "F", "I", "B", "UP", "S", "PT", "SIM", "C4", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use assert, fake secrets/passwords, and run subprocesses.
+"tests/**" = ["S101", "S105", "S106", "S603"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["app", "tests"]
+
+# ---------------------------------------------------------------- pytest / coverage
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config --cov=app --cov-report=term-missing"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+
+# ---------------------------------------------------------------- import-linter
+# Architecture boundaries. Run with: lint-imports
+# More contracts (module boundaries, "only the ledger writes balances") are added
+# when those modules exist; a contract may not name a module that does not exist yet.
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "Layers: main -> api -> core (imports only point downward)"
+type = "layers"
+layers = ["app.main", "app.api", "app.core"]
