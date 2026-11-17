@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api import API_V1_PREFIX
@@ -59,6 +60,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.readiness = readiness
 
+    if settings.app_env == "local":
+        app.add_middleware(
+            CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["GET"]
+        )
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
     app.include_router(health_router)

@@ -1,0 +1,104 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "../../design-system/ledgerops/tokens.css";
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@theme inline {
+  --color-ledger-accent: var(--color-accent);
+  --color-ledger-muted: var(--color-muted-foreground);
+}
+:root {color-scheme:dark;--ease:cubic-bezier(.22,1,.36,1);--hair:0 0 0 1px #94a3b826;font-family:var(--font-sans);color:var(--color-foreground);background:var(--color-background)}
+* {box-sizing:border-box}
+body {margin:0}
+.wrap {width:min(1160px,90%);margin:auto}
+header {box-shadow:0 1px #94a3b826}
+.nav,.caption,.account,.total,.actions {display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav {height:74px}
+.brand {font-size:22px;letter-spacing:-1px}
+.brand i {display:inline-grid;place-items:center;background:var(--color-accent);color:var(--color-background);width:34px;height:34px;border-radius:9px;font-style:normal;margin-right:6px}
+aside,small,code,td,b,.badge,input {font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+aside {font-size:13px;color:#b7c9c4;background:#0b191c;padding:12px 16px;border-radius:8px;margin-top:26px}
+.hero {display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:8%;padding:64px 0}
+h1 {font-size:clamp(56px,6.5vw,92px);line-height:.97;letter-spacing:-.065em;margin:0}
+h1 span,.badge {color:var(--color-accent)}
+p,code,small {color:var(--color-muted-foreground)}
+p {line-height:1.55;max-width:47ch}
+.actions {justify-content:flex-start;margin-top:24px}
+button,a {font:inherit;color:inherit;cursor:pointer}
+button {border:0;border-radius:7px;padding:10px 14px;transition:transform 150ms var(--ease),background 180ms var(--ease)}
+@media(prefers-reduced-motion:no-preference) {button:active {transform:scale(.98)}}
+button:focus-visible,a:focus-visible,:focus-visible {outline:2px solid var(--color-ring);outline-offset:3px}
+.primary {background:var(--color-accent);color:var(--color-on-accent);font-weight:700;padding:13px 18px}
+.primary:hover {background:#4ade80}
+.quiet {background:var(--color-muted)}
+a {text-underline-offset:4px}
+.preview,dialog {background:var(--color-card);padding:26px;border-radius:16px;box-shadow:var(--hair),0 18px 60px #0004}
+.preview {background:linear-gradient(140deg,#10282b,var(--color-card) 75%)}
+.caption {font-size:20px;font-weight:650}
+small {font-size:12px;font-weight:400}
+.account {margin-top:16px;background:#0a121d;padding:18px;border-radius:8px;box-shadow:var(--hair)}
+code {display:block;font-size:12px;margin-top:4px}
+.hero > *, .preview * {min-width:0}
+.account,.total,.posting div {flex-wrap:wrap}
+.preview {overflow-wrap:anywhere}
+.preview b {margin-inline-start:auto}
+.journal-description {display:block;max-inline-size:30ch;white-space:normal;overflow-wrap:anywhere;color:var(--color-muted-foreground)}
+td:nth-child(3),td:nth-child(4) {max-inline-size:26ch;white-space:normal;overflow-wrap:anywhere}
+.total {margin-top:24px;color:#b8dbc9}
+h2 {margin:0;font-size:26px;letter-spacing:-.04em}
+#journal {padding:24px 0 64px;box-shadow:0 -1px #94a3b826}
+#journal p {max-width:none}
+.scroll {overflow:auto;border-radius:10px;box-shadow:var(--hair)}
+table {width:100%;border-collapse:collapse;font-size:14px;text-align:left;white-space:nowrap}
+th,td {padding:14px 12px}
+th {font-weight:500;color:var(--color-muted-foreground);background:var(--color-muted)}
+td {background:var(--color-card);box-shadow:inset 0 1px #94a3b814}
+.badge {background:#133127;border-radius:5px;padding:4px}
+.link {font-size:12px;text-decoration:underline;background:transparent;padding:6px}
+dialog {border:0;width:min(440px,90vw);color:inherit}
+dialog::backdrop {background:#000a}
+label {display:block;margin:20px 0 6px}
+select,input {width:100%;margin-top:8px;background:var(--color-muted);color:inherit;border:0;box-shadow:var(--hair);border-radius:6px;padding:12px;font-size:16px}
+@keyframes enter {from {opacity:0;transform:translateY(8px)}}
+@media(prefers-reduced-motion:no-preference) {
+  h1,dialog[open] {animation:enter 200ms var(--ease) backwards}
+  .hero .actions {animation:enter 180ms var(--ease) 45ms backwards}
+  .preview {animation:enter 240ms var(--ease) 75ms backwards}
+}
+@media(prefers-reduced-motion:reduce) {*,*::before,*::after {scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+@media(max-width:780px) {.hero {grid-template-columns:1fr;gap:32px;padding:40px 0}.preview {padding:18px}.account {padding:14px}.actions {flex-wrap:wrap}}
+
+.nav-tools {display:flex;align-items:center;gap:12px}
+.nav-tools .quiet {border-radius:999px;box-shadow:var(--hair);font-size:13px}
+.architecture-link {color:var(--color-accent);font-weight:600}
+.posting {margin:20px 0;padding:16px 0 0;box-shadow:0 -1px #94a3b826}
+.posting div {display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:14px}
+.transfer {width:100%}
+#architecture {margin:0 auto 48px}
+.hero h1 span {color:var(--color-accent)}
+@media(max-width:650px) {
+  .nav {height:auto;min-height:68px;flex-wrap:wrap;padding:12px 0;gap:8px}
+  .nav-tools {gap:8px;flex-wrap:wrap}
+  .nav-tools button {padding:9px 10px;font-size:12px}
+}
+.architecture-grid {display:grid;grid-template-columns:1fr;gap:16px;margin:24px 0}
+.architecture-grid article {min-width:0;overflow-wrap:anywhere;background:#f8fafc;color:#172637;padding:24px;border-radius:14px;box-shadow:var(--hair)}
+.architecture-grid h3 {font-size:22px;line-height:1.15;margin:16px 0 8px}
+.architecture-grid p,.architecture-grid code {color:#42556a}
+.architecture-grid p code {display:inline}
+.architecture-grid svg,.architecture-grid a {color:#17624b}
+.architecture-grid a:focus-visible {outline-color:#17624b}
+#architecture footer {color:var(--color-muted-foreground);line-height:1.6}
+#architecture footer strong {display:block;color:var(--color-foreground)}
+@media(min-width:768px) {
+  .architecture-grid {grid-template-columns:repeat(6,minmax(0,1fr))}
+  .architecture-grid article {grid-column:span 3}
+  .architecture-grid article:first-child {grid-column:span 4}
+  .architecture-grid article:nth-child(2) {grid-column:span 2}
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  .architecture-grid article {transition:transform 160ms var(--ease)}
+  .architecture-grid article:hover {transform:translateY(-2px)}
+}

@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      APP_ENV: local
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "--max-time", "3", "http://127.0.0.1:8000/health/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  frontend:
+    image: node:24-bookworm-slim
+    working_dir: /workspace/frontend
+    volumes:
+      - ./frontend:/workspace/frontend
+      - frontend_modules:/workspace/frontend/node_modules
+      - ./design-system:/workspace/design-system:ro
+    environment:
+      LEDGEROPS_POLL_FILES: 'true'
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "127.0.0.1:5173:5173"
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+    depends_on:
+      backend:
+        condition: service_healthy
+volumes:
+  frontend_modules:

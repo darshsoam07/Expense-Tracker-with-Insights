@@ -9,7 +9,7 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 | Item | State |
 |---|---|
 | Phase | **Phase 1, PR 2 of 5** (backend skeleton and minimal CI) |
-| New application | **Backend skeleton only** (FastAPI: configuration, logging, errors, health endpoints). No database, login, or banking features yet. No frontend yet |
+| New application | FastAPI foundation with health endpoints and a standalone React ledger preview. Transfers use browser memory and reset on reload. |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
 
@@ -33,7 +33,20 @@ scripts/                  Cross-platform (Python) verification scripts
 - [Architecture decision records](docs/architecture/adr/): why each major decision was made
 - [Legacy migration record](docs/legacy-migration.md): relocation, verification, Docker instructions
 
+## Running both services with Docker Compose
+
+Create `backend/.env` from `backend/.env.example` and configure the local secret as described there. From the repository root run `docker compose up --build`, then open <http://localhost:5173>. The browser reads FastAPI readiness at <http://localhost:8000/health/ready>. Source files are bind-mounted for Vite hot reload. Run `docker compose down` to stop the services.
+
 ## Running the new backend
+
+To run the ledger preview from the repository root:
+
+```sh
+npm ci --prefix frontend
+npm run dev --prefix frontend
+```
+
+Open the local URL printed by Vite. The preview runs independently. The API indicator polls FastAPI readiness every 15 seconds through the Vite proxy. Run the backend on port 8000 to see its status. Click the indicator to refresh immediately.
 
 See [`backend/README.md`](backend/README.md) for setup, run and test commands (PowerShell and Git Bash).
 
