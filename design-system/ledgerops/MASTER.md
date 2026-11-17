@@ -1,214 +1,46 @@
-# Design System Master File
+# LedgerOps — Institutional Luxury Design System
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+This specification implements the approved LedgerOps 2.0 blueprint for the public website and operations console.
 
----
+## Palette
 
-**Project:** LedgerOps
-**Generated:** 2026-11-17 19:51:52
-**Category:** Financial Dashboard
+| Token | Value | Purpose |
+|---|---|---|
+| --lo-canvas | #F3F1EB | Warm application canvas |
+| --lo-forest | #111B18 | Sidebar and editorial dark sections |
+| --lo-emerald | #244F43 | Primary actions and financial emphasis |
+| --lo-champagne | #B89A6A | Small premium accents and chart markers |
+| --lo-card | #FFFFFF | Panels and cards |
+| --lo-border | #E6E1D7 | Hairline boundaries |
+| --lo-text | #18211D | Main text |
+| --lo-muted | #747D76 | Decorative or large secondary labels |
+| --lo-secondary-text | #59645D | Accessible small supporting text |
+| --lo-success | #34775C | Success semantics |
+| --lo-warning | #B77B36 | Warning semantics |
+| --lo-critical | #B84F4B | Critical semantics |
 
----
+Use darker semantic text variants for small status text on tinted backgrounds. Champagne accents carry no essential information by themselves.
 
-## Global Rules
+## Typography and spacing
 
-### Color Palette
+Manrope is the interface and heading family. IBM Plex Mono is reserved for money, identifiers, timestamps and numerical metadata. Financial numerals use tabular figures.
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#0F172A` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#1E293B` | `--color-secondary` |
-| On Secondary | `#FFFFFF` | `--color-on-secondary` |
-| Accent/CTA | `#22C55E` | `--color-accent` |
-| On Accent/CTA | `#0F172A` | `--color-on-accent` |
-| Background | `#020617` | `--color-background` |
-| Foreground | `#F8FAFC` | `--color-foreground` |
-| Card | `#0E1223` | `--color-card` |
-| Card Foreground | `#F8FAFC` | `--color-card-foreground` |
-| Muted | `#1A1E2F` | `--color-muted` |
-| Muted Foreground | `#94A3B8` | `--color-muted-foreground` |
-| Border | `#334155` | `--color-border` |
-| Destructive | `#EF4444` | `--color-destructive` |
-| On Destructive | `#000000` | `--color-on-destructive` |
-| Ring | `#FFFFFF` | `--color-ring` |
+Use an 8px primary spacing rhythm with 4px adjustments for compact metadata. Public content has a 1240px maximum width. Console gutters scale from 36px to 18px. The desktop sidebar is 248px, with a 78px collapsed rail. Cards have 14px radii, buttons 7px, dialogs 16px.
 
-**Color Notes:** Dark bg + green positive indicators
+## Components and behavior
 
-### Typography
+Shared components include AppShell, Sidebar, Topbar, PageHeader, MetricCard, StatusBadge, DataTable, FilterBar, TransactionRow, ActivityTimeline, ChartPanel, EmptyState, LoadingState, ErrorState and ConfirmationDialog.
 
-- **Heading Font:** IBM Plex Sans
-- **Body Font:** IBM Plex Sans
-- **Mood:** financial, trustworthy, professional, corporate, banking, serious
-- **Google Fonts:** [IBM Plex Sans + IBM Plex Sans](https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap)
+Every destination has its own URL under /console. Unsupported workflows display an unavailable state with no invented records. Authentication-dependent administration explains its access requirement. The Operator and Auditor personas preview UI access only.
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
-```
+Transfers, journal rows and balances share one browser-memory dataset. Journal rows open a detail dialog with matching debit/credit postings, copy-key feedback and replay detection. CSV export uses the filtered journal. Settings can reset demo data after confirmation.
 
-### Spacing Variables
+## Motion and accessibility
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
+Entrance animations are limited to the public hero and dialogs. Use transform and opacity at 180–250ms with cubic-bezier(.22,1,.36,1). Hover colors use 180ms. Reduced motion disables transitions, transforms introduced by animations and smooth scrolling. No scroll fade-ins.
 
-### Shadow Depths
+Tables scroll within their cards. Mobile navigation is keyboard operable, traps focus while open, restores focus on dismissal, and is inert while hidden. Controls have visible focus and accessible labels.
 
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+## Data provenance
 
----
-
-## Component Specs
-
-### Buttons
-
-```css
-/* Primary Button */
-.btn-primary {
-  background: #22C55E;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #0F172A;
-  border: 2px solid #0F172A;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-```
-
-### Cards
-
-```css
-.card {
-  background: #020617;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
-
-### Inputs
-
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
-
-.input:focus {
-  border-color: #0F172A;
-  outline: none;
-  box-shadow: 0 0 0 3px #0F172A20;
-}
-```
-
-### Modals
-
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
-
----
-
-## Style Guidelines
-
-**Style:** Dark Mode (OLED)
-
-**Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
-
-**Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
-
-**Key Effects:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
-
-### Page Pattern
-
-**Pattern Name:** Enterprise Gateway
-
-- **Conversion Strategy:** Path selection (I am a...). Mega menu navigation. Trust signals prominent. Provide pause/stop for video and rotating logos; stop on focus and reduced motion. Logo carousel controls must be keyboard operable; pause moving media offscreen/hidden and render a static final state under reduced motion.
-- **CTA Placement:** Contact Sales (Primary) + Login (Secondary)
-- **Section Order:** Hero (Video/Mission) > Solutions by Industry > Solutions by Role > Client Logos > Contact Sales
-
----
-
-## Anti-Patterns (Do NOT Use)
-
-- ❌ Light mode default
-- ❌ Slow rendering
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+The financial charts derive from the labelled synthetic journal. Pending approvals and exception queues display unavailable integrations. API readiness comes from the existing FastAPI endpoint and reports the latest check time. Latency, utilization and other absent metrics remain unavailable.

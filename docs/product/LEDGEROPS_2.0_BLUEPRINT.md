@@ -1,8 +1,11 @@
-# LedgerOps 2.0 — Product, Experience, and Engineering Blueprint
+﻿# LedgerOps 2.0 â€” Product, Experience, and Engineering Blueprint
 
 **Status:** Approved product direction for implementation planning  
 **Product:** LedgerOps  
 **Repository:** `darshsoam07/Expense-Tracker-with-Insights`  
+**Status:** Approved product direction for implementation planning
+**Product:** LedgerOps
+**Repository:** `darshsoam07/Expense-Tracker-with-Insights`
 **Last specification update:** 17 November 2026
 
 This document is the implementation specification for the LedgerOps 2.0 product direction. It is deliberately separate from `AGENTS.md`: that file tells Codex how to work in the repository; this file defines **what LedgerOps should become**.
@@ -55,7 +58,7 @@ Required sections:
 1. **Navigation:** LedgerOps identity, Platform, Operations, Reliability, Architecture, Documentation, Launch Demo.
 2. **Hero:** concise product promise, short supporting copy, primary `Explore the Console` CTA, secondary `View Architecture` CTA, and a carefully designed dashboard/product preview.
 3. **Capability overview:** Banking Core, Financial Operations, Governance, Reliability Engineering.
-4. **Operational workflow:** a visual path such as Initiate → Validate → Approve → Post → Reconcile → Audit.
+4. **Operational workflow:** a visual path such as Initiate â†’ Validate â†’ Approve â†’ Post â†’ Reconcile â†’ Audit.
 5. **Cloud-native architecture:** React frontend, FastAPI application, PostgreSQL, worker/outbox where implemented, telemetry, CI/CD, and cloud deployment path. Visually distinguish deployed components from planned components.
 6. **Reliability/security:** explain actual safeguards and tested properties only. Do not claim certifications.
 7. **Engineering notes / architecture decisions:** link to ADRs and technical documentation.
@@ -107,7 +110,7 @@ Mobile:
 
 ### 3.1 Design direction
 
-**Institutional Luxury** — a restrained combination of private-banking refinement and modern enterprise operations software.
+**Institutional Luxury** â€” a restrained combination of private-banking refinement and modern enterprise operations software.
 
 Desired qualities:
 
@@ -156,10 +159,10 @@ Do not use champagne for long text or small text on a white background. Maintain
 ### 3.4 Layout, shape, motion
 
 - Use an 8px spacing rhythm with documented tokens.
-- Cards: generally 14–18px radius; buttons and inputs can be tighter.
+- Cards: generally 14â€“18px radius; buttons and inputs can be tighter.
 - Borders are subtle and should define structure without outlining every nested element.
 - Shadows are restrained and reserved for overlays, floating menus, and modals.
-- Hover/focus/pressed transitions: approximately 160–220ms, ease-out.
+- Hover/focus/pressed transitions: approximately 160â€“220ms, ease-out.
 - Respect `prefers-reduced-motion`.
 - All interactive controls require visible focus, keyboard support, descriptive labels, and appropriate hit areas.
 
