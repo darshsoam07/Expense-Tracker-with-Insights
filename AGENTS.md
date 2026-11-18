@@ -1,6 +1,7 @@
-# Codex Repository Instructions — LedgerOps
+﻿# Codex Repository Instructions â€” LedgerOps
 
 > **Read this file and `docs/product/LEDGEROPS_2.0_BLUEPRINT.md` before making changes.**  
+> **Read this file and `docs/product/LEDGEROPS_2.0_BLUEPRINT.md` before making changes.**
 > These documents define the product direction and engineering constraints. Treat the blueprint as an approved specification, not loose inspiration.
 
 ## 1. Mission and product identity
@@ -11,8 +12,8 @@ The product is intended to feel like a premium enterprise fintech operations pla
 
 The platform has two distinct experiences:
 
-1. **Public product website** — communicates the product, capabilities, architecture, reliability approach, and demo access.
-2. **Banking operations console** — the working application for customer accounts, transfers, ledger inspection, operations workflows, governance, and platform health.
+1. **Public product website** â€” communicates the product, capabilities, architecture, reliability approach, and demo access.
+2. **Banking operations console** â€” the working application for customer accounts, transfers, ledger inspection, operations workflows, governance, and platform health.
 
 ### Non-negotiable honesty statement
 
@@ -38,6 +39,8 @@ If the blueprint conflicts with existing code, **do not silently bend the bluepr
 
 Repository: `darshsoam07/Expense-Tracker-with-Insights`  
 Product name: `LedgerOps`  
+Repository: `darshsoam07/Expense-Tracker-with-Insights`
+Product name: `LedgerOps`
 Primary stack: React + TypeScript + Vite + Tailwind CSS; FastAPI + Python; PostgreSQL; SQLAlchemy 2.x; Alembic; Docker Compose; GitHub Actions.
 
 ### Verified state snapshot (2026-11-17)
@@ -131,11 +134,11 @@ Windows is a supported developer environment. Include PowerShell commands and av
 
 At completion, report:
 
-1. **Scope completed** — what is genuinely implemented.
-2. **Files changed** — grouped by backend, frontend, infrastructure, docs/tests.
-3. **Behavior** — user-visible and API behavior, including limitations.
-4. **Verification** — exact commands and pass/fail status; distinguish local and CI results.
-5. **Known gaps/risks** — anything not verified or deliberately deferred.
-6. **Next step** — one concrete next PR/task.
+1. **Scope completed** â€” what is genuinely implemented.
+2. **Files changed** â€” grouped by backend, frontend, infrastructure, docs/tests.
+3. **Behavior** â€” user-visible and API behavior, including limitations.
+4. **Verification** â€” exact commands and pass/fail status; distinguish local and CI results.
+5. **Known gaps/risks** â€” anything not verified or deliberately deferred.
+6. **Next step** â€” one concrete next PR/task.
 
 Do not claim production readiness. LedgerOps is a portfolio-grade simulated platform unless the owner explicitly changes that scope and funds the necessary security, operational, legal, and compliance work.
