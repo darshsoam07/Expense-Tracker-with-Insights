@@ -30,8 +30,8 @@ def test_each_app_has_its_own_state() -> None:
     first = create_app(make_settings(log_level="DEBUG"))
     second = create_app(make_settings(log_level="ERROR"))
     with TestClient(first):
-        assert first.state.readiness.run() == {"app_started": True}
-        assert second.state.readiness.run() == {"app_started": False}
+        assert first.state.readiness.run() == {"app_started": True, "database": False}
+        assert second.state.readiness.run() == {"app_started": False, "database": False}
     assert first.state.settings.log_level == "DEBUG"
     assert second.state.settings.log_level == "ERROR"
 

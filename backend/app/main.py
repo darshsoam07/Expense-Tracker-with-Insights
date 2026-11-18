@@ -22,6 +22,7 @@ from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.core.readiness import ReadinessRegistry
 from app.core.request_context import RequestContextMiddleware
+from app.db import database_ready, make_engine
 
 logger = logging.getLogger("app")
 
@@ -32,6 +33,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings = load_settings()
     configure_logging(settings.log_level)
     readiness = ReadinessRegistry()
+    engine = (
+        make_engine(settings.database_url.get_secret_value()) if settings.database_url else None
+    )
+    readiness.register("database", lambda: database_ready(engine) if engine is not None else False)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -43,7 +48,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
-            readiness.mark_stopping()  # readiness turns 503 first, so traffic drains
+            readiness.mark_stopping()
+            if engine is not None:
+                engine.dispose()
+            # Readiness is disabled before disposing the pool.
+
             logger.info("app.shutdown")
 
     docs_enabled = settings.enable_docs

@@ -4,3 +4,6 @@
 !constraints.txt
 !app/
 !app/**/*.py
+!alembic.ini
+!migrations/
+!migrations/**/*.py

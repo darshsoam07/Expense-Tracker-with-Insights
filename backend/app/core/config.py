@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     cookie_secure: bool = True
     debug: bool = False
     enable_docs: bool = True
+    database_url: SecretStr | None = None
 
     @field_validator("log_level", mode="before")
     @classmethod

@@ -17,5 +17,5 @@ def test_readiness_cors(environment: str, origin: str, allowed: bool) -> None:
     settings = make_settings(app_env=environment, cookie_secure=True, secret_key=STRONG_SECRET)
     with TestClient(create_app(settings)) as client:
         response = client.get("/health/ready", headers={"Origin": origin})
-    assert response.status_code == 200
+    assert response.status_code == 503
     assert response.headers.get("access-control-allow-origin") == (origin if allowed else None)
