@@ -8,8 +8,12 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | **Phase 1, PR 3** (PostgreSQL foundation) |
-| New application | FastAPI foundation with health endpoints and a standalone React ledger preview. Transfers use browser memory and reset on reload. |
+| Phase | **Phase 1, PR 3H active** (architecture alignment) |
+| PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
+| PR 3H | 🔄 Active — ADR-0009 amendments, implementation roadmap, README update. Zero runtime changes. |
+| Next: PR 5 | CI pipeline — GitHub Actions (Linux PostgreSQL integration + Windows lint/unit/frontend build) |
+| After PR 5 | PR 4a (authentication), then PR 4b (frontend/API integration) |
+| New application | FastAPI foundation with health endpoints and a React frontend shell. In-browser transfer simulation is **demo only** — browser memory, resets on reload, not durable. |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
 
@@ -93,12 +97,23 @@ py scripts/verify_legacy.py         # starts the legacy app in a temp folder and
 
 ## Roadmap
 
-1. **Phase 1:** foundation (FastAPI, PostgreSQL, authentication, React shell, CI)
-2. **Phase 2:** accounts, double-entry ledger, transfers, idempotency
-3. **Phase 3:** customer experience, statements, reports
-4. **Phases 4 to 6:** delivery automation, AWS (Terraform), observability and recovery drills
-5. **Phase 7:** optional extensions, only where a concrete need is shown
+The active delivery sequence (revised in PR 3H) is:
+
+`PR 3 → PR 3H → PR 5 → PR 4a → PR 4b → PR 6a → PR 6b → PR 7a → PR 8 → …`
+
+| PR | Scope | Status |
+|---|---|---|
+| PR 3 | PostgreSQL foundation, Alembic, Compose, health endpoints | ✅ Merged |
+| PR 3H | ADR-0009 amendments, roadmap, README | 🔄 Active |
+| PR 5 | CI pipeline (Linux + Windows) | ⏳ Next |
+| PR 4a | Authentication — sessions, login, CSRF | ⏳ Queued |
+| PR 4b | Frontend / API integration, Vite proxy, CORS removal | ⏳ Queued |
+| PR 6a | Accounts, double-entry ledger, internal transfers | ⏳ Planned |
+| PR 6b | Corporate customer model (`customers` + `customer_members`) | ⏳ Planned |
+| PR 7a | Fund holds, available balance enforcement | ⏳ Planned |
+| PR 8 | External payments, clearing lifecycle, outbox worker | ⏳ Planned |
+| PR 9+ | Multi-currency, statements, observability, cloud deployment | ⏳ Future |
 
 Each phase is approved before it starts. No cloud resources are created without explicit approval.
 
-See [PR 3 setup, roles, verification and rollback](docs/architecture/pr3-database-foundation.md) and the [approved product blueprint](docs/product/LEDGEROPS_2.0_BLUEPRINT.md).
+See [ADR-0009 amendments](docs/architecture/adr/0009-ledgerops-2-amendments.md), the [implementation roadmap](docs/product/LedgerOps%202.0%20Repository-Grounded%20Assessment%20and%20Implementation%20Roadmap.md), [PR 3 setup and rollback](docs/architecture/pr3-database-foundation.md), and the [approved product blueprint](docs/product/LEDGEROPS_2.0_BLUEPRINT.md).
