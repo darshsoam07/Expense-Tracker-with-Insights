@@ -4,5 +4,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 COPY pyproject.toml constraints.txt ./
 RUN pip install --no-cache-dir --constraint constraints.txt .
 COPY app ./app
+COPY alembic.ini ./
+COPY migrations ./migrations
+RUN useradd --uid 10001 --create-home ledgerops
+USER ledgerops
 EXPOSE 8000
 CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

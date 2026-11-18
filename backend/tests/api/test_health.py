@@ -13,24 +13,30 @@ def test_liveness_is_ok(client: TestClient) -> None:
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_readiness_is_ok_after_startup(client: TestClient) -> None:
+def test_readiness_requires_database_configuration(client: TestClient) -> None:
     response = client.get("/health/ready")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ready", "checks": {"app_started": "ok"}}
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "not_ready",
+        "checks": {"app_started": "ok", "database": "fail"},
+    }
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_readiness_makes_no_claim_about_a_database(client: TestClient) -> None:
-    """Honesty guard: the database check is PR 3. Until then no 'database' key may appear."""
+def test_missing_database_is_not_ready(client: TestClient) -> None:
+    """Missing database configuration must fail closed."""
     checks = client.get("/health/ready").json()["checks"]
-    assert set(checks) == {"app_started"}
+    assert checks["database"] == "fail"
 
 
 def test_not_ready_before_startup_completes_but_still_alive(app: FastAPI) -> None:
     client = TestClient(app)  # no "with": start-up has NOT run
     ready = client.get("/health/ready")
     assert ready.status_code == 503
-    assert ready.json() == {"status": "not_ready", "checks": {"app_started": "fail"}}
+    assert ready.json() == {
+        "status": "not_ready",
+        "checks": {"app_started": "fail", "database": "fail"},
+    }
     assert client.get("/health/live").status_code == 200
 
 
@@ -42,8 +48,8 @@ def test_readiness_fails_as_soon_as_shutdown_begins(app: FastAPI, client: TestCl
 
 def test_readiness_is_false_after_the_server_stops(app: FastAPI) -> None:
     with TestClient(app) as client:
-        assert client.get("/health/ready").status_code == 200
-    assert app.state.readiness.run() == {"app_started": False}
+        assert client.get("/health/ready").status_code == 503
+    assert app.state.readiness.run() == {"app_started": False, "database": False}
 
 
 def test_a_failing_check_makes_the_service_not_ready_but_not_dead(
@@ -54,7 +60,7 @@ def test_a_failing_check_makes_the_service_not_ready_but_not_dead(
     assert response.status_code == 503
     assert response.json() == {
         "status": "not_ready",
-        "checks": {"app_started": "ok", "example_dependency": "fail"},
+        "checks": {"app_started": "ok", "database": "fail", "example_dependency": "fail"},
     }
     assert client.get("/health/live").status_code == 200
 
@@ -62,8 +68,12 @@ def test_a_failing_check_makes_the_service_not_ready_but_not_dead(
 def test_a_passing_extra_check_is_reported(app: FastAPI, client: TestClient) -> None:
     app.state.readiness.register("example_dependency", lambda: True)
     response = client.get("/health/ready")
-    assert response.status_code == 200
-    assert response.json()["checks"] == {"app_started": "ok", "example_dependency": "ok"}
+    assert response.status_code == 503
+    assert response.json()["checks"] == {
+        "app_started": "ok",
+        "database": "fail",
+        "example_dependency": "ok",
+    }
 
 
 def test_a_crashing_check_is_a_failure_and_its_error_stays_in_the_logs(

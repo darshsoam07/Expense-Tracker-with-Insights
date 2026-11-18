@@ -1,9 +1,44 @@
 services:
+  database:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ledgerops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ledgerops"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  bootstrap:
+    build: ./backend
+    environment:
+      ADMIN_DATABASE_URL: ${ADMIN_DATABASE_URL:?Set ADMIN_DATABASE_URL}
+      MIGRATION_PASSWORD: ${MIGRATION_PASSWORD:?Set MIGRATION_PASSWORD}
+      RUNTIME_PASSWORD: ${RUNTIME_PASSWORD:?Set RUNTIME_PASSWORD}
+    command: python -m app.db.bootstrap
+    depends_on:
+      database:
+        condition: service_healthy
+  migrate:
+    build: ./backend
+    environment:
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL:?Set MIGRATION_DATABASE_URL}
+    command: alembic upgrade head
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
   backend:
     build: ./backend
-    env_file: ./backend/.env
     environment:
       APP_ENV: local
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      COOKIE_SECURE: "false"
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:
@@ -29,4 +64,5 @@ services:
       backend:
         condition: service_healthy
 volumes:
+  postgres_data:
   frontend_modules:

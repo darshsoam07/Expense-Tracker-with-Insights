@@ -1,11 +1,6 @@
 """Readiness: "can this instance safely receive traffic right now?"
 
-Today (PR 2) there is exactly one check, "app_started": true after startup completes and
-false as soon as shutdown begins (so a load balancer can stop sending traffic before the
-process exits).
-
-There is NO database check yet. PostgreSQL arrives in PR 3, which will register a database
-check here with `register()`. Until then readiness says nothing about any database.
+The application factory registers database and schema compatibility alongside process startup.
 """
 
 import logging

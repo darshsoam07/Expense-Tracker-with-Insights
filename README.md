@@ -8,7 +8,7 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | **Phase 1, PR 2 of 5** (backend skeleton and minimal CI) |
+| Phase | **Phase 1, PR 3** (PostgreSQL foundation) |
 | New application | FastAPI foundation with health endpoints and a standalone React ledger preview. Transfers use browser memory and reset on reload. |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
@@ -35,7 +35,7 @@ scripts/                  Cross-platform (Python) verification scripts
 
 ## Running both services with Docker Compose
 
-Create `backend/.env` from `backend/.env.example` and configure the local secret as described there. From the repository root run `docker compose up --build`, then open <http://localhost:5173>. The browser reads FastAPI readiness at <http://localhost:8000/health/ready>. Source files are bind-mounted for Vite hot reload. Run `docker compose down` to stop the services.
+Run `python scripts/init_compose.py` to create local Compose credentials in the root `.env`. Existing files are preserved. From the repository root run `docker compose up --build`, then open <http://localhost:5173>. The browser reads FastAPI readiness at <http://localhost:8000/health/ready>. Source files are bind-mounted for Vite hot reload. Run `docker compose down` to stop the services.
 
 ## Running the new backend
 
@@ -100,3 +100,5 @@ py scripts/verify_legacy.py         # starts the legacy app in a temp folder and
 5. **Phase 7:** optional extensions, only where a concrete need is shown
 
 Each phase is approved before it starts. No cloud resources are created without explicit approval.
+
+See [PR 3 setup, roles, verification and rollback](docs/architecture/pr3-database-foundation.md) and the [approved product blueprint](docs/product/LEDGEROPS_2.0_BLUEPRINT.md).
