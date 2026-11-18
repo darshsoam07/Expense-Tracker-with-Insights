@@ -1,4 +1,4 @@
-# --- Secrets and local configuration (never commit) ---
+﻿# --- Secrets and local configuration (never commit) ---
 .env
 .env.*
 !.env.example
@@ -42,4 +42,7 @@ instance/
 .DS_Store
 Thumbs.db
 
+# Local agent tooling — not application source, not needed for reproducible builds
 .agents/
+skills-lock.json
+
