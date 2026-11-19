@@ -1,10 +1,8 @@
 """Financial operations exercised through HTTP and independent PostgreSQL sessions."""
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from decimal import Decimal
 from threading import Barrier
-from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,28 +15,7 @@ from app.modules.audit import AuditWriter
 from app.modules.finance.provision import provision
 from app.modules.finance.queries import accounts
 from app.modules.finance.transfers import transfer
-from tests.integration.conftest import UserFactory, login
-
-
-@dataclass
-class Workspace:
-    actor: UUID
-    email: str
-    src: UUID
-    dst: UUID
-
-
-@pytest.fixture
-def workspace(make_user: UserFactory, migrator_engine: Engine) -> Workspace:
-    user = make_user(("operator",))
-    with Session(migrator_engine) as db, db.begin():
-        provision(db, user.id)
-        provision(db, user.id)
-        rows = sorted(
-            accounts(db, user.id), key=lambda a: Decimal(str(a["ledger_balance"])), reverse=True
-        )
-        assert [r["available_balance"] for r in rows] == ["1000.00", "0.00"]
-        return Workspace(user.id, user.email, UUID(str(rows[0]["id"])), UUID(str(rows[1]["id"])))
+from tests.integration.conftest import UserFactory, Workspace, login
 
 
 def test_internal_transfer(api: TestClient, workspace: Workspace, make_user: UserFactory) -> None:
