@@ -10,7 +10,7 @@ Design rules:
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import SecretStr, ValidationError, field_validator, model_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["local", "test", "staging", "production"]
@@ -62,6 +62,13 @@ class Settings(BaseSettings):
     debug: bool = False
     enable_docs: bool = True
     database_url: SecretStr | None = None
+    # Sessions (ADR-0005 defaults) and account lockout.
+    session_idle_minutes: int = Field(default=30, ge=1, le=1440)
+    session_absolute_hours: int = Field(default=8, ge=1, le=168)
+    login_max_failures: int = Field(default=5, ge=3, le=20)
+    login_lock_minutes: int = Field(default=15, ge=1, le=1440)
+    # Extra origins allowed to make state-changing requests (the request's own origin always is).
+    allowed_origins: list[str] = Field(default_factory=list)
 
     @field_validator("log_level", mode="before")
     @classmethod

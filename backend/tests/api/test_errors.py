@@ -54,7 +54,12 @@ def test_validation_errors_are_structured_and_never_echo_input(
         return payload
 
     app.add_api_route("/echo", echo, methods=["POST"])
-    response = client.post("/echo", json={"amount": "not-a-number", "password": 12345})
+    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
+    response = client.post(
+        "/echo",
+        json={"amount": "not-a-number", "password": 12345},
+        headers={"X-CSRF-Token": csrf},
+    )
     assert response.status_code == 422
     error = assert_standard_shape(response.json(), "validation_error")
     assert error["message"] == "Request validation failed."
@@ -71,7 +76,12 @@ def test_a_submitted_password_is_not_echoed_back_in_a_validation_error(
         return payload
 
     app.add_api_route("/echo", echo, methods=["POST"])
-    response = client.post("/echo", json={"amount": "bad", "password": "hunter2-secret"})
+    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
+    response = client.post(
+        "/echo",
+        json={"amount": "bad", "password": "hunter2-secret"},
+        headers={"X-CSRF-Token": csrf},
+    )
     assert response.status_code == 422
     assert "hunter2-secret" not in response.text
 

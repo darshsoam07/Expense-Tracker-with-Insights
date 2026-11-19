@@ -21,6 +21,30 @@ jobs:
     name: Backend (lint, types, architecture, tests)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # A real PostgreSQL 17 server, same major version as Compose, for the integration tests.
+    # Throw-away credentials; the database exists only for this job.
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_PASSWORD: ci-admin-password
+          POSTGRES_DB: ledgerops
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ledgerops"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      ADMIN_DATABASE_URL: postgresql://postgres:ci-admin-password@localhost:5432/ledgerops
+      MIGRATION_PASSWORD: ci-migration-password
+      RUNTIME_PASSWORD: ci-runtime-password
+      MIGRATION_DATABASE_URL: postgresql+psycopg://ledgerops_migrator:ci-migration-password@localhost:5432/ledgerops
+      TEST_DATABASE_URL: postgresql+psycopg://ledgerops_runtime:ci-runtime-password@localhost:5432/ledgerops
+      TEST_MIGRATION_DATABASE_URL: postgresql+psycopg://ledgerops_migrator:ci-migration-password@localhost:5432/ledgerops
+      # A missing database must fail the build, not silently skip the integration tests.
+      REQUIRE_DATABASE_TESTS: "1"
     defaults:
       run:
         working-directory: backend
@@ -56,7 +80,12 @@ jobs:
       - name: Architecture boundaries (import-linter)
         run: lint-imports
 
-      - name: Tests (pytest, coverage must be at least 85%)
+      - name: Create database roles and migrate to head
+        run: |
+          python -m app.db.bootstrap
+          alembic upgrade head
+
+      - name: Tests (pytest incl. PostgreSQL integration, coverage must be at least 85%)
         run: pytest
 
   postgres:

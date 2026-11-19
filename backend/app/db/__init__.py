@@ -2,11 +2,12 @@
 
 import os
 from collections.abc import Iterator
+from contextlib import contextmanager
 
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session
 
-SCHEMA_REVISION = "0001_foundation"
+SCHEMA_REVISION = "0002_identity_rbac_audit"
 
 
 def make_engine(url: str) -> Engine:
@@ -39,3 +40,10 @@ def sessions(engine: Engine) -> Iterator[Session]:
 def migration_url() -> str:
     """Read migration credentials separately from the runtime application."""
     return os.environ["MIGRATION_DATABASE_URL"]
+
+
+@contextmanager
+def open_session(engine: Engine) -> Iterator[Session]:
+    """Context-manager form of `sessions` for code that is not a FastAPI dependency."""
+    with Session(engine) as session:
+        yield session
