@@ -7,6 +7,7 @@ import {
   type Transfer,
   type TransferCommand,
 } from "../api";
+import { AccountHolds } from "./AccountHolds";
 import { useAuth } from "../context/AuthContext";
 import { ConfirmationDialog, PageHeader } from "../components/ui";
 
@@ -135,11 +136,30 @@ export function FinancialWorkspace({ section }: { section: string }) {
                 {detail.customer_name} · {detail.status}
               </p>
               <p>
-                Ledger balance <span className="numeric">{detail.currency} {detail.ledger_balance}</span>
+                Ledger balance{" "}
+                <span className="numeric">
+                  {detail.currency} {detail.ledger_balance}
+                </span>
               </p>
               <p>
-                Available balance <span className="numeric">{detail.currency} {detail.available_balance}</span>
+                Available balance{" "}
+                <span className="numeric">
+                  {detail.currency} {detail.available_balance}
+                </span>
               </p>
+              <p>
+                Held amount{" "}
+                <span className="numeric">
+                  {detail.currency} {detail.held_amount}
+                </span>
+              </p>
+              {user?.permissions.includes("holds.read") && (
+                <AccountHolds
+                  account={detail}
+                  user={user}
+                  refresh={() => refresh((n) => n + 1)}
+                />
+              )}
               <button onClick={() => select("")}>Close detail</button>
             </section>
           )}
@@ -155,6 +175,9 @@ export function FinancialWorkspace({ section }: { section: string }) {
                     <strong className="numeric">
                       {a.currency} {a.ledger_balance}
                     </strong>
+                  </p>
+                  <p>
+                    Held amount <span className="numeric">{a.currency} {a.held_amount}</span>
                   </p>
                   <p>
                     Available balance{" "}
@@ -190,7 +213,10 @@ export function FinancialWorkspace({ section }: { section: string }) {
                 <article key={p.id}>
                   <code>{p.reference}</code>
                   <p>
-                    {p.description} · {p.direction} · <span className="numeric">{p.currency} {p.amount}</span>
+                    {p.description} · {p.direction} ·{" "}
+                    <span className="numeric">
+                      {p.currency} {p.amount}
+                    </span>
                   </p>
                   <time>{p.posted_at}</time>
                 </article>
@@ -214,7 +240,10 @@ export function FinancialWorkspace({ section }: { section: string }) {
                 <article key={t.id}>
                   <code>{t.journal_reference}</code>
                   <p>
-                    {t.status} · <span className="numeric">{t.currency} {t.amount}</span>
+                    {t.status} ·{" "}
+                    <span className="numeric">
+                      {t.currency} {t.amount}
+                    </span>
                   </p>
                   <time>{t.created_at}</time>
                 </article>
