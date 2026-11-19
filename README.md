@@ -8,14 +8,14 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | **Phase 1, PR 4b active** (frontend auth integration, Windows CI & documentation) |
+| Phase | PR 6a financial integrity foundation in progress |
 | PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
 | PR 3H | ✅ Merged — ADR-0009 amendments, implementation roadmap, README update, repo hygiene |
 | PR 5 | ✅ Merged (GitHub PR #2) — Institutional Luxury website and operations console, frontend CI job |
 | PR 4a | ✅ Merged (GitHub PR #5) — Identity, RBAC, sessions, CSRF, and append-only audit trail |
-| PR 4b | 🔄 Active — Frontend auth integration, login/logout UI, same-origin Vite proxy, CORS removal, Windows CI job |
-| Next: PR 6a | Core banking domain — ledger accounts, double-entry journals, balanced postings |
-| Application | React frontend with real session auth (via Vite proxy to FastAPI backend). Transfers return HTTP 501 until PR 6a. |
+| PR 4b | Merged — Frontend auth integration, login/logout UI, same-origin Vite proxy, CORS removal, Windows CI job |
+| PR 6a | In progress on the financial integrity feature branch |
+| Application | Cookie-authenticated console with scoped INR accounts, posted journals and simulated internal transfers |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
 
@@ -109,8 +109,8 @@ The active delivery sequence (revised in PR 3H) is:
 | PR 3H | ADR-0009 amendments, roadmap, README | ✅ Merged |
 | PR 5 | Institutional Luxury UI & frontend CI | ✅ Merged |
 | PR 4a | Authentication — identity, sessions, CSRF, RBAC, audit | ✅ Merged |
-| PR 4b | Frontend auth integration, Vite proxy, CORS removal, Windows CI | 🔄 Active |
-| PR 6a | Accounts, double-entry ledger, internal transfers | ⏳ Next |
+| PR 4b | Frontend auth integration, Vite proxy, CORS removal, Windows CI | Merged |
+| PR 6a | Accounts, double-entry ledger, internal transfers | In progress |
 | PR 6b | Corporate customer model (`customers` + `customer_members`) | ⏳ Planned |
 | PR 7a | Fund holds, available balance enforcement | ⏳ Planned |
 | PR 8 | External payments, clearing lifecycle, outbox worker | ⏳ Planned |
@@ -119,3 +119,5 @@ The active delivery sequence (revised in PR 3H) is:
 Each phase is approved before it starts. No cloud resources are created without explicit approval.
 
 See [ADR-0009 amendments](docs/architecture/adr/0009-ledgerops-2-amendments.md), the [implementation roadmap](docs/product/LedgerOps%202.0%20Repository-Grounded%20Assessment%20and%20Implementation%20Roadmap.md), [PR 3 setup and rollback](docs/architecture/pr3-database-foundation.md), and the [approved product blueprint](docs/product/LEDGEROPS_2.0_BLUEPRINT.md).
+
+See the [financial core decision and provisioning guide](docs/architecture/adr/0010-internal-financial-core.md) for account access, journal posting, and transfer retries.
