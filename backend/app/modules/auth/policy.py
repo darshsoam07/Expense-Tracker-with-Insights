@@ -9,6 +9,9 @@ from enum import StrEnum
 
 
 class Permission(StrEnum):
+    ACCOUNTS_READ = "accounts.read"
+    LEDGER_READ = "ledger.read"
+    TRANSFERS_CREATE = "transfers.create"
     USERS_READ = "users.read"
     USERS_MANAGE = "users.manage"
     AUDIT_READ = "audit.read"
@@ -34,15 +37,32 @@ class Role(StrEnum):
 ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.ADMIN: frozenset(
         {
+            Permission.ACCOUNTS_READ,
+            Permission.LEDGER_READ,
+            Permission.TRANSFERS_CREATE,
             Permission.USERS_READ,
             Permission.USERS_MANAGE,
             Permission.AUDIT_READ,
             Permission.PLATFORM_READ,
         }
     ),
-    Role.OPERATOR: frozenset({Permission.PLATFORM_READ}),
+    Role.OPERATOR: frozenset(
+        {
+            Permission.PLATFORM_READ,
+            Permission.ACCOUNTS_READ,
+            Permission.LEDGER_READ,
+            Permission.TRANSFERS_CREATE,
+        }
+    ),
     Role.APPROVER: frozenset({Permission.PLATFORM_READ}),
-    Role.AUDITOR: frozenset({Permission.AUDIT_READ, Permission.PLATFORM_READ}),
+    Role.AUDITOR: frozenset(
+        {
+            Permission.AUDIT_READ,
+            Permission.PLATFORM_READ,
+            Permission.ACCOUNTS_READ,
+            Permission.LEDGER_READ,
+        }
+    ),
     Role.VIEWER: frozenset({Permission.PLATFORM_READ}),
 }
 

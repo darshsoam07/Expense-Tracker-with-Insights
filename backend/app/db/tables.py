@@ -6,12 +6,14 @@ the two cannot silently drift apart.
 """
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
     Integer,
     LargeBinary,
     MetaData,
+    Numeric,
     SmallInteger,
     Table,
     Text,
@@ -99,4 +101,118 @@ audit_events = Table(
     Column("request_id", Text),
     Column("reason", Text),
     Column("metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+)
+
+currencies = Table(
+    "currencies",
+    metadata,
+    Column("code", Text, primary_key=True),
+)
+
+customers = Table(
+    "customers",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("name", Text, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+customer_members = Table(
+    "customer_members",
+    metadata,
+    Column("customer_id", Uuid, primary_key=True),
+    Column("user_id", Uuid, primary_key=True),
+    Column("role", Text, nullable=False),
+    Column("active", Boolean, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+chart_accounts = Table(
+    "chart_accounts",
+    metadata,
+    Column("code", Text, primary_key=True),
+    Column("name", Text, nullable=False),
+    Column("classification", Text, nullable=False),
+    Column("normal_side", Text, nullable=False),
+    Column("postable", Boolean, nullable=False),
+    Column("active", Boolean, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+ledger_accounts = Table(
+    "ledger_accounts",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("code", Text, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("active", Boolean, nullable=False),
+)
+
+accounts = Table(
+    "accounts",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("reference", Uuid, nullable=False),
+    Column("customer_id", Uuid, nullable=False),
+    Column("account_type", Text, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("ledger_id", Uuid, nullable=False),
+    Column("code", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+account_balances = Table(
+    "account_balances",
+    metadata,
+    Column("lock_marker", Boolean, nullable=False),
+    Column("ledger_id", Uuid, primary_key=True),
+    Column("currency", Text, nullable=False),
+    Column("ledger_balance", Numeric(18, 2), nullable=False),
+    Column("available_balance", Numeric(18, 2)),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
+)
+
+journal_entries = Table(
+    "journal_entries",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("reference", Uuid, nullable=False),
+    Column("description", Text, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("actor_id", Uuid),
+    Column("actor_principal", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("posted_at", DateTime(timezone=True)),
+)
+
+journal_postings = Table(
+    "journal_postings",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("journal_id", Uuid, nullable=False),
+    Column("ledger_id", Uuid, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("debit", Numeric(18, 2), nullable=False),
+    Column("credit", Numeric(18, 2), nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+transfers = Table(
+    "transfers",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("actor_id", Uuid, nullable=False),
+    Column("operation", Text, nullable=False),
+    Column("idempotency_key", Text, nullable=False),
+    Column("payload_hash", Text, nullable=False),
+    Column("source_id", Uuid, nullable=False),
+    Column("destination_id", Uuid, nullable=False),
+    Column("amount", Numeric(18, 2), nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("journal_id", Uuid, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
 )
