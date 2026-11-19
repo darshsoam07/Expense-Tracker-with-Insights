@@ -1,7 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  ArrowDownToLine,
   ArrowRight,
   ArrowUpRight,
   ChevronRight,
@@ -13,7 +12,6 @@ import {
   RefreshCw,
   Scale,
   ShieldCheck,
-  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -38,8 +36,9 @@ import {
   type Health,
 } from "../model";
 import { destinations } from "../components/AppShell";
-import { api, ApiError } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { FinancialWorkspace } from "./FinancialWorkspace";
+
 
 interface Props {
   entries: Entry[];
@@ -51,15 +50,16 @@ export function ConsolePages({
   reset,
   health,
 }: Props) {
+
   const { user } = useAuth();
   const { section = "" } = useParams();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [period, setPeriod] = useState("All activity");
-  const [transferOpen, setTransferOpen] = useState(false);
+
   const [selected, setSelected] = useState<Entry | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
-  const [source, setSource] = useState(0);
+
   const balances = balancesFor(entries);
   const visible = entries.filter((entry) =>
     (entry.description + entry.id + accountNames[entry.source])
@@ -73,60 +73,8 @@ export function ConsolePages({
         )
       : visible;
   const totalVolume = filtered.reduce((sum, entry) => sum + entry.amount, 0);
-  const canTransfer = Boolean(user);
+
   const title = destinations.find((item) => item.slug === section)?.label;
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const input = event.currentTarget.elements.namedItem(
-      "amount",
-    ) as HTMLInputElement;
-    const cents = Math.round(Number(input.value) * 100);
-    if (!Number.isSafeInteger(cents) || cents < 1 || cents > balances[source]) {
-      input.setCustomValidity("Enter an amount within the available balance.");
-      input.reportValidity();
-      return;
-    }
-    try {
-      await api.createTransfer({
-        amount: cents,
-        source,
-        destination: 1 - source,
-        description: "Internal liquidity allocation",
-      });
-      toast.success("Transfer submitted");
-    } catch (err: unknown) {
-      const apiErr = err as ApiError;
-      if (apiErr.status === 501 || apiErr.code === "not_implemented") {
-        toast.error("Transfers are not available yet.", {
-          description: "Financial transfer processing arrives in PR 6.",
-        });
-      } else {
-        toast.error(apiErr.message || "Failed to submit transfer");
-      }
-    } finally {
-      setTransferOpen(false);
-    }
-  }
-  async function replay(entry: Entry) {
-    try {
-      await api.createTransfer({
-        amount: entry.amount,
-        source: entry.source,
-        destination: 1 - entry.source,
-        description: entry.description,
-      });
-      toast.success("Transfer submitted");
-    } catch (err: unknown) {
-      const apiErr = err as ApiError;
-      if (apiErr.status === 501 || apiErr.code === "not_implemented") {
-        toast.error("Transfers are not available yet.", {
-          description: "Financial transfer processing arrives in PR 6.",
-        });
-      } else {
-        toast.error(apiErr.message || "Failed to submit transfer");
-      }
-    }
-  }
   async function copy(key: string) {
     try {
       await navigator.clipboard.writeText(key);
@@ -135,38 +83,7 @@ export function ConsolePages({
       toast.error("Clipboard unavailable");
     }
   }
-  function exportJournal() {
-    const rows = [
-      "Reference,Description,Amount USD,Source,Destination,Timestamp",
-      ...filtered.map((entry) =>
-        [
-          entry.id,
-          entry.description,
-          (entry.amount / 100).toFixed(2),
-          accountIds[entry.source],
-          accountIds[1 - entry.source],
-          entry.time,
-        ].join(","),
-      ),
-    ];
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(
-      new Blob([rows.join("\n")], { type: "text/csv" }),
-    );
-    link.download = "ledgerops-demo-journal.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-  }
-  const newTransfer = (
-    <button
-      className="button primary"
-      onClick={() => setTransferOpen(true)}
-      disabled={!canTransfer}
-    >
-      <Plus size={16} />
-      Simulate transfer
-    </button>
-  );
+  const newTransfer = <Link className="button primary" to="/console/transfers"><Plus size={16}/> Internal transfers</Link>;
   const journal = (
     <section className="panel">
       <div className="panel-heading">
@@ -174,7 +91,7 @@ export function ConsolePages({
           {section === "ledger" ? "Balanced journal" : "Recent transactions"}
         </h2>
         <span className="subtle">
-          Static demonstration data · Transfers unavailable until PR 6
+          Static demonstration data · Overview sample only
         </span>
       </div>
       {section !== "" && (
@@ -259,7 +176,7 @@ export function ConsolePages({
           <span className="tiny-square" />
           <strong>Sandbox workspace</strong>
           <span>
-            Financial data is synthetic and resets on refresh. Service readiness
+            Overview figures are static examples. Open Accounts for stored INR balances. Service readiness
             is live.
           </span>
         </div>
@@ -410,68 +327,8 @@ export function ConsolePages({
         </div>
       </>
     );
-  else if (section === "accounts")
-    content = (
-      <>
-        <PageHeader
-          title="Accounts"
-          description="Two synthetic accounts in the browser sandbox."
-        />
-        <div className="account-grid">
-          {accountNames.map((name, index) => (
-            <article className="panel account-detail" key={name}>
-              <Wallet size={25} />
-              <StatusBadge>Demo</StatusBadge>
-              <h2>{name}</h2>
-              <code>{accountIds[index]}</code>
-              <strong className="account-amount numeric">
-                {money(balances[index])}
-              </strong>
-              <p>USD · Synthetic workspace account</p>
-              <button
-                className="button secondary"
-                onClick={() => {
-                  setSource(index);
-                  setTransferOpen(true);
-                }}
-                disabled={!canTransfer}
-              >
-                Simulate transfer <ArrowUpRight size={15} />
-              </button>
-            </article>
-          ))}
-        </div>
-        <p className="small-note">
-          Account lifecycle and customer ownership require the future backend
-          account API.
-        </p>
-      </>
-    );
-  else if (section === "transfers" || section === "ledger")
-    content = (
-      <>
-        <PageHeader
-          title={title}
-          description="Session-only transfers with balanced debit and credit postings."
-          actions={
-            <div className="header-actions">
-              <button className="button secondary" onClick={exportJournal}>
-                <ArrowDownToLine size={16} />
-                Export demo CSV
-              </button>
-              {newTransfer}
-            </div>
-          }
-        />
-        {!canTransfer && (
-          <div className="demo-notice">
-            Auditor preview · Transfer creation is unavailable for this demo
-            persona.
-          </div>
-        )}
-        {journal}
-      </>
-    );
+  else if (["accounts","transfers","ledger"].includes(section))
+    content = <FinancialWorkspace key={section} section={section} />;
   else if (section === "health" || section === "infrastructure")
     content = (
       <>
@@ -617,62 +474,6 @@ export function ConsolePages({
     <>
       {content}
       <ConfirmationDialog
-        open={transferOpen}
-        close={() => setTransferOpen(false)}
-        title="Simulate a transfer"
-      >
-        <form onSubmit={submit}>
-          <p>
-            Move synthetic funds between your two demo accounts. This updates
-            the current browser session.
-          </p>
-          <label>
-            From account
-            <select
-              value={source}
-              onChange={(event) => setSource(Number(event.target.value))}
-            >
-              {accountNames.map((name, index) => (
-                <option key={name} value={index}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p>
-            Available{" "}
-            <strong className="numeric">{money(balances[source])}</strong>
-          </p>
-          <div className="transfer-destination">
-            <ArrowRight size={15} />
-            To {accountNames[1 - source]}
-          </div>
-          <label>
-            Amount · USD
-            <input
-              name="amount"
-              type="number"
-              min=".01"
-              max={balances[source] / 100}
-              step=".01"
-              required
-              defaultValue="250.00"
-              onInput={(event) => event.currentTarget.setCustomValidity("")}
-            />
-          </label>
-          <div className="dialog-actions">
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => setTransferOpen(false)}
-            >
-              Cancel
-            </button>
-            <button className="button primary">Post simulated transfer</button>
-          </div>
-        </form>
-      </ConfirmationDialog>
-      <ConfirmationDialog
         open={!!selected}
         close={() => setSelected(null)}
         title="Journal entry"
@@ -701,12 +502,9 @@ export function ConsolePages({
                 <Copy size={15} />
                 Copy key
               </button>
-              <button className="button primary" onClick={() => void replay(selected)}>
-                Replay request
-              </button>
             </div>
             <p className="small-note">
-              Replay detection applies to this browser session.
+              This entry belongs to the static demonstration.
             </p>
           </div>
         )}

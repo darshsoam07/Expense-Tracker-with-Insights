@@ -87,10 +87,7 @@ async function parseApiError(res: Response): Promise<ApiError> {
   );
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const method = (options.method || "GET").toUpperCase();
   const headers = new Headers(options.headers || {});
 
@@ -100,7 +97,11 @@ async function request<T>(
     headers.set("X-CSRF-Token", token);
   }
 
-  if (options.body && typeof options.body === "string" && !headers.has("Content-Type")) {
+  if (
+    options.body &&
+    typeof options.body === "string" &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -134,7 +135,10 @@ export const api = {
     return data;
   },
 
-  async login(credentials: { email: string; password: string }): Promise<AuthStateResponse> {
+  async login(credentials: {
+    email: string;
+    password: string;
+  }): Promise<AuthStateResponse> {
     const data = await request<AuthStateResponse>("/api/v1/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),
@@ -155,15 +159,55 @@ export const api = {
     }
   },
 
-  async createTransfer(payload: {
-    amount: number;
-    source: number;
-    destination?: number;
-    description?: string;
-  }): Promise<never> {
-    return request<never>("/api/v1/transfers", {
+  account: (id: string) => request<Account>(`/api/v1/accounts/${id}`),
+  accounts: () => request<Account[]>("/api/v1/accounts"),
+  ledger: (id: string, offset: number) =>
+    request<Posting[]>(
+      `/api/v1/accounts/${id}/ledger?limit=25&offset=${offset}`,
+    ),
+  transfers: (offset: number) =>
+    request<Transfer[]>(`/api/v1/transfers?limit=25&offset=${offset}`),
+  createTransfer: (payload: TransferCommand, key: string) =>
+    request<Transfer>("/api/v1/transfers", {
       method: "POST",
+      headers: { "Idempotency-Key": key },
       body: JSON.stringify(payload),
-    });
-  },
+    }),
 };
+
+export type Money = string;
+export interface Account {
+  id: string;
+  reference: string;
+  customer_name: string;
+  currency: string;
+  status: string;
+  ledger_balance: Money;
+  available_balance: Money;
+}
+export interface Posting {
+  id: string;
+  reference: string;
+  posted_at: string;
+  description: string;
+  direction: string;
+  amount: Money;
+  currency: string;
+}
+export interface TransferCommand {
+  source_id: string;
+  destination_id: string;
+  amount: Money;
+  currency: "INR";
+  description: string;
+}
+export interface Transfer {
+  id: string;
+  source_id: string;
+  destination_id: string;
+  amount: Money;
+  currency: string;
+  journal_reference: string;
+  created_at: string;
+  status: string;
+}
