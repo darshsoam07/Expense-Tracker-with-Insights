@@ -1,5 +1,7 @@
 # LedgerOps 2.0 — Repository-Grounded Assessment and Implementation Roadmap
 
+**Delivery update, 19 November 2026.** PR 4b is merged. PR 6a is in progress on the financial integrity feature branch. Historical baseline assessments below describe earlier revisions. See [ADR 0010](../architecture/adr/0010-internal-financial-core.md).
+
 **Document status:** Living reference — updated after each PR architect review.  
 **Last updated:** 2026-11-19 (PR 4b implementation session)  
 **Amends:** `docs/product/LEDGEROPS_2.0_BLUEPRINT.md` delivery sequencing; does not override product requirements.

@@ -65,6 +65,10 @@ alembic("upgrade", "head")
 assert database_ready(runtime)
 assert tables() >= IDENTITY_TABLES
 alembic("downgrade", "-1")
+assert revision() == ["0002_identity_rbac_audit"]
+assert tables() >= IDENTITY_TABLES
+assert "journal_entries" not in tables()
+alembic("downgrade", "-1")
 assert revision() == ["0001_foundation"]
 assert not IDENTITY_TABLES & tables()
 alembic("upgrade", "head")

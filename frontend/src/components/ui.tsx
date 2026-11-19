@@ -290,7 +290,15 @@ export function ConfirmationDialog({
     if (!open) ref.current?.close();
   }, [open]);
   return (
-    <dialog ref={ref} onClose={close} aria-labelledby="dialog-title">
+    <dialog
+      ref={ref}
+      onCancel={(event) => {
+        event.preventDefault();
+        close();
+      }}
+      onClose={close}
+      aria-labelledby="dialog-title"
+    >
       <div className="dialog-heading">
         <h2 id="dialog-title">{title}</h2>
         <button onClick={close} aria-label="Close dialog">

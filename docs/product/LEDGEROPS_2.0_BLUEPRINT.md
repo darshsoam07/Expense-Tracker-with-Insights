@@ -1,4 +1,6 @@
-﻿# LedgerOps 2.0 â€” Product, Experience, and Engineering Blueprint
+# LedgerOps 2.0 â€” Product, Experience, and Engineering Blueprint
+
+**Delivery update, 19 November 2026.** PR 4b is merged. PR 6a is in progress on the financial integrity feature branch. Historical baseline assessments below describe earlier revisions. See [ADR 0010](../architecture/adr/0010-internal-financial-core.md).
 
 **Status:** Approved product direction for implementation planning  
 **Product:** LedgerOps  
