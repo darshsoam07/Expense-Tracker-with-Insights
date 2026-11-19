@@ -8,13 +8,13 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | PR 6a financial integrity foundation in progress |
+| Phase | PR 7a account holds in local review |
 | PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
 | PR 3H | ✅ Merged — ADR-0009 amendments, implementation roadmap, README update, repo hygiene |
 | PR 5 | ✅ Merged (GitHub PR #2) — Institutional Luxury website and operations console, frontend CI job |
 | PR 4a | ✅ Merged (GitHub PR #5) — Identity, RBAC, sessions, CSRF, and append-only audit trail |
 | PR 4b | Merged — Frontend auth integration, login/logout UI, same-origin Vite proxy, CORS removal, Windows CI job |
-| PR 6a | In progress on the financial integrity feature branch |
+| PR 6a | Merged in GitHub PR #7 |
 | Application | Cookie-authenticated console with scoped INR accounts, posted journals and simulated internal transfers |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
@@ -110,9 +110,9 @@ The active delivery sequence (revised in PR 3H) is:
 | PR 5 | Institutional Luxury UI & frontend CI | ✅ Merged |
 | PR 4a | Authentication — identity, sessions, CSRF, RBAC, audit | ✅ Merged |
 | PR 4b | Frontend auth integration, Vite proxy, CORS removal, Windows CI | Merged |
-| PR 6a | Accounts, double-entry ledger, internal transfers | In progress |
+| PR 6a | Accounts, double-entry ledger, internal transfers | Merged |
 | PR 6b | Corporate customer model (`customers` + `customer_members`) | ⏳ Planned |
-| PR 7a | Fund holds, available balance enforcement | ⏳ Planned |
+| PR 7a | Account holds, expiry, available balance and capture through internal transfer | In local review |
 | PR 8 | External payments, clearing lifecycle, outbox worker | ⏳ Planned |
 | PR 9+ | Multi-currency, statements, observability, cloud deployment | ⏳ Future |
 
@@ -121,3 +121,5 @@ Each phase is approved before it starts. No cloud resources are created without 
 See [ADR-0009 amendments](docs/architecture/adr/0009-ledgerops-2-amendments.md), the [implementation roadmap](docs/product/LedgerOps%202.0%20Repository-Grounded%20Assessment%20and%20Implementation%20Roadmap.md), [PR 3 setup and rollback](docs/architecture/pr3-database-foundation.md), and the [approved product blueprint](docs/product/LEDGEROPS_2.0_BLUEPRINT.md).
 
 See the [financial core decision and provisioning guide](docs/architecture/adr/0010-internal-financial-core.md) for account access, journal posting, and transfer retries.
+
+Account detail shows ledger, held and available INR balances. See the [hold lifecycle, API and verification guide](docs/architecture/adr/0011-account-holds.md).
