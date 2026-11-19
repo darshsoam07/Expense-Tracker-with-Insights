@@ -63,7 +63,10 @@ IDENTITY_TABLES = {
 # upgrade head -> downgrade -1 -> upgrade head (PR 4a requirement), then the full base round trip.
 alembic("upgrade", "head")
 assert database_ready(runtime)
-assert tables() >= IDENTITY_TABLES
+assert tables() >= IDENTITY_TABLES | {"account_holds", "hold_events"}
+alembic("downgrade", "-1")
+assert revision() == ["0003_financial_integrity"]
+assert "hold_events" not in tables()
 alembic("downgrade", "-1")
 assert revision() == ["0002_identity_rbac_audit"]
 assert tables() >= IDENTITY_TABLES

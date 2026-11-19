@@ -159,6 +159,26 @@ export const api = {
     }
   },
 
+  holds: (accountId: string, offset: number) =>
+    request<Hold[]>(
+      `/api/v1/accounts/${accountId}/holds?limit=10&offset=${offset}`,
+    ),
+  hold: (id: string, offset: number) =>
+    request<Hold & { events: HoldEvent[] }>(
+      `/api/v1/holds/${id}?limit=10&offset=${offset}`,
+    ),
+  createHold: (id: string, body: CreateHold, key: string) =>
+    request<HoldReceipt>(`/api/v1/accounts/${id}/holds`, {
+      method: "POST",
+      headers: { "Idempotency-Key": key },
+      body: JSON.stringify(body),
+    }),
+  releaseHold: (id: string, amount: Money | null, key: string) =>
+    request<HoldReceipt>(`/api/v1/holds/${id}/release`, {
+      method: "POST",
+      headers: { "Idempotency-Key": key },
+      body: JSON.stringify({ currency: "INR", amount }),
+    }),
   account: (id: string) => request<Account>(`/api/v1/accounts/${id}`),
   accounts: () => request<Account[]>("/api/v1/accounts"),
   ledger: (id: string, offset: number) =>
@@ -177,12 +197,14 @@ export const api = {
 
 export type Money = string;
 export interface Account {
+  membership_role: "owner" | "administrator" | "member" | "viewer";
   id: string;
   reference: string;
   customer_name: string;
   currency: string;
   status: string;
   ledger_balance: Money;
+  held_amount: Money;
   available_balance: Money;
 }
 export interface Posting {
@@ -210,4 +232,41 @@ export interface Transfer {
   journal_reference: string;
   created_at: string;
   status: string;
+}
+
+export interface Hold {
+  id: string;
+  account_id: string;
+  original_amount: Money;
+  remaining: Money;
+  currency: string;
+  status: string;
+  reason: string;
+  business_reference: string | null;
+  expires_at: string | null;
+  created_at: string;
+  creator: string;
+}
+export interface HoldEvent {
+  id: string;
+  kind: string;
+  currency: string;
+  amount: Money;
+  remaining: Money;
+  occurred_at: string;
+  journal_id: string | null;
+}
+export interface CreateHold {
+  currency: "INR";
+  amount: Money;
+  reason: string;
+  business_reference: string | null;
+  expires_at: string | null;
+}
+interface HoldReceipt {
+  hold_id: string;
+  event_id: string;
+  kind: string;
+  remaining: Money;
+  currency: string;
 }

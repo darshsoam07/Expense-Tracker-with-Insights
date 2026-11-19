@@ -20,6 +20,7 @@ Reader = Annotated[ActiveSession, Depends(require_permission("accounts.read"))]
 
 class TransferInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    hold_id: UUID | None = None
     source_id: UUID
     destination_id: UUID
     currency: Literal["INR"]
@@ -39,6 +40,8 @@ def create_transfer(
         str, Header(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
     ],
 ) -> dict[str, object]:
+    if body.hold_id is not None:
+        require_permission("holds.release")(request, active, db, clock)
     result, created = transfers.transfer(
         db,
         active.user_id,
@@ -49,6 +52,7 @@ def create_transfer(
         idempotency_key,
         AuditWriter(clock),
         request_id_of(request),
+        body.hold_id,
     )
     response.status_code = 201 if created else 200
     return result

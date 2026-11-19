@@ -20,6 +20,7 @@ from app.api.auth import me_router
 from app.api.auth import router as auth_router
 from app.api.deps import enforce_csrf
 from app.api.health import router as health_router
+from app.api.holds import router as holds_router
 from app.api.transfers import router as transfers_router
 from app.core.clock import Clock, SystemClock
 from app.core.config import Settings, load_settings
@@ -86,6 +87,7 @@ def create_app(settings: Settings | None = None, *, clock: Clock | None = None) 
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(me_router)
+    app.include_router(holds_router)
     app.include_router(accounts_router)
     app.include_router(transfers_router)
     return app

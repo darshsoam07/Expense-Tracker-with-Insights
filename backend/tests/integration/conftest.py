@@ -12,6 +12,7 @@ database fails the build instead of silently skipping the tests.
 import os
 from collections.abc import Iterator
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Protocol
 from uuid import UUID, uuid4
 
@@ -25,6 +26,8 @@ from app.core.security import hash_password
 from app.db import database_ready, make_engine
 from app.db.tables import roles, user_roles, users
 from app.main import create_app
+from app.modules.finance.provision import provision
+from app.modules.finance.queries import accounts
 from tests.helpers import FakeClock, make_settings
 
 PASSWORD = "correct horse battery staple"
@@ -150,3 +153,24 @@ def login(client: TestClient, email: str, password: str = PASSWORD) -> dict[str,
     assert response.status_code == 200, response.text
     body: dict[str, object] = response.json()
     return body
+
+
+@dataclass
+class Workspace:
+    actor: UUID
+    email: str
+    src: UUID
+    dst: UUID
+
+
+@pytest.fixture
+def workspace(make_user: UserFactory, migrator_engine: Engine) -> Workspace:
+    user = make_user(("operator",))
+    with Session(migrator_engine) as db, db.begin():
+        provision(db, user.id)
+        provision(db, user.id)
+        rows = sorted(
+            accounts(db, user.id), key=lambda a: Decimal(str(a["ledger_balance"])), reverse=True
+        )
+        assert [r["available_balance"] for r in rows] == ["1000.00", "0.00"]
+        return Workspace(user.id, user.email, UUID(str(rows[0]["id"])), UUID(str(rows[1]["id"])))

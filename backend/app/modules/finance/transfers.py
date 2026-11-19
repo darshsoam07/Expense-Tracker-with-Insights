@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError
 from app.core.principal import Principal
 from app.modules.audit import AuditWriter
+from app.modules.finance import holds
 from app.modules.finance.posting import Line, post
 
 HISTORY = """
@@ -45,12 +46,15 @@ def transfer(
     key: str,
     audit: AuditWriter,
     request_id: str | None,
+    hold_id: UUID | None = None,
 ) -> tuple[dict[str, object], bool]:
     if source == destination or amount <= 0 or amount != amount.quantize(Decimal(".01")):
         raise AppError(
             422, "invalid_transfer", "Choose different accounts and a positive INR amount."
         )
     payload = json.dumps([str(source), str(destination), format(amount, ".2f"), "INR", description])
+    if hold_id is not None:
+        payload = json.dumps([payload, str(hold_id)])
     digest = hashlib.sha256(payload.encode()).hexdigest()
     journal = uuid4()
     params = {
@@ -63,21 +67,26 @@ def transfer(
         "id": uuid4(),
         "journal": journal,
     }
+    maintenance = None
     try:
         # Lock in ledger UUID order even when two transfers have opposite directions.
         locks = db.execute(
             text("""
-            SELECT k.ledger_id FROM ledgerops.account_balances k
+            SELECT a.id,m.role FROM ledgerops.account_balances k
             JOIN ledgerops.accounts a ON a.ledger_id=k.ledger_id
             JOIN ledgerops.customer_members m ON m.customer_id=a.customer_id
             WHERE a.id IN (:src,:dst) AND m.active AND m.user_id=:actor
               AND (a.id<>:src OR m.role<>'viewer')
-            ORDER BY k.ledger_id FOR UPDATE OF k
+            ORDER BY a.id FOR UPDATE OF k
         """),
             params,
         ).all()
         if len(locks) != 2:
             raise AppError(404, "account_not_found", "Account unavailable.")
+        now = audit.clock.now()
+        expired = sum(holds.expire_locked(db, row.id, now, audit, request_id) for row in locks)
+        if expired:
+            maintenance = db.begin_nested()
         inserted = db.execute(
             text("""
             INSERT INTO ledgerops.transfers(id,actor_id,idempotency_key,payload_hash,source_id,
@@ -114,7 +123,32 @@ def transfer(
                 raise AppError(
                     409, "account_unavailable", "Both accounts must be active INR accounts."
                 )
-            if accounts[source].available_balance < amount:
+            if hold_id is not None:
+                if holds.locate(db, actor, hold_id) != source:
+                    raise AppError(404, "hold_not_found", "Hold unavailable.")
+                reservation = holds.detail(db, hold_id)
+                role = next(row.role for row in locks if row.id == source)
+                if not holds.may_release(role, actor, reservation["creator"]):
+                    raise AppError(403, "forbidden", "Membership cannot consume this hold.")
+                if Decimal(reservation["remaining"]) != amount:
+                    raise AppError(
+                        409, "invalid_capture", "Transfer must match remaining reservation."
+                    )
+                holds.append_event(
+                    db,
+                    audit,
+                    request_id,
+                    account=source,
+                    hold=hold_id,
+                    kind="captured",
+                    amount=amount,
+                    remaining=Decimal(0),
+                    actor=actor,
+                    now=now,
+                    command="capture",
+                    journal=journal,
+                )
+            elif accounts[source].available_balance < amount:
                 raise AppError(409, "insufficient_funds", "Available balance is insufficient.")
             zero = Decimal(0)
             post(
@@ -140,6 +174,13 @@ def transfer(
         result = dict(db.execute(text(HISTORY + " AND t.id=:id"), params).mappings().one())
         db.commit()
         return result, inserted is not None
+    except AppError:
+        if maintenance is not None:
+            maintenance.rollback()
+            db.commit()
+        else:
+            db.rollback()
+        raise
     except OperationalError as exc:
         db.rollback()
         if getattr(exc.orig, "sqlstate", None) in {"40P01", "40001", "55P03", "57014"}:

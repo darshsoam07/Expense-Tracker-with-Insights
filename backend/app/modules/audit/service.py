@@ -24,6 +24,10 @@ class AuditWriter:
     def __init__(self, clock: Clock) -> None:
         self._clock = clock
 
+    @property
+    def clock(self) -> Clock:
+        return self._clock
+
     def record(
         self,
         db: Session,

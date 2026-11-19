@@ -1,6 +1,6 @@
 # LedgerOps 2.0 â€” Product, Experience, and Engineering Blueprint
 
-**Delivery update, 19 November 2026.** PR 4b is merged. PR 6a is in progress on the financial integrity feature branch. Historical baseline assessments below describe earlier revisions. See [ADR 0010](../architecture/adr/0010-internal-financial-core.md).
+**Delivery update, 20 November 2026.** PR 6a merged in GitHub PR #7. PR 7a implements account holds in local review. PR 7b will consume this subsystem. The earlier baseline below is historical. See [ADR 0011](../architecture/adr/0011-account-holds.md).
 
 **Status:** Approved product direction for implementation planning  
 **Product:** LedgerOps  

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -284,6 +284,7 @@ export function ConfirmationDialog({
   title: string;
   children: ReactNode;
 }) {
+  const titleId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     if (open && !ref.current?.open) ref.current?.showModal();
@@ -297,10 +298,10 @@ export function ConfirmationDialog({
         close();
       }}
       onClose={close}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
     >
       <div className="dialog-heading">
-        <h2 id="dialog-title">{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <button onClick={close} aria-label="Close dialog">
           ×
         </button>

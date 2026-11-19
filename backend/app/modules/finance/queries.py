@@ -8,9 +8,10 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError
 
 ACCOUNT_QUERY = """
-SELECT a.id, a.reference, a.account_type, a.customer_id, c.name AS customer_name,
+SELECT m.role AS membership_role, a.id, a.reference, a.account_type, a.customer_id,
+       c.name AS customer_name,
        a.currency, a.status, a.created_at, b.updated_at, b.ledger_balance::text AS ledger_balance,
-       b.available_balance::text AS available_balance
+       b.held_amount::text AS held_amount, b.available_balance::text AS available_balance
 FROM ledgerops.accounts a JOIN ledgerops.customers c ON c.id=a.customer_id
 JOIN ledgerops.customer_members m ON m.customer_id=c.id
 JOIN ledgerops.account_balances b ON b.ledger_id=a.ledger_id
