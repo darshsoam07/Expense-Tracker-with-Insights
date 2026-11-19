@@ -8,12 +8,14 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | **Phase 1, PR 3H active** (architecture alignment) |
+| Phase | **Phase 1, PR 4b active** (frontend auth integration, Windows CI & documentation) |
 | PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
-| PR 3H | 🔄 Active — ADR-0009 amendments, implementation roadmap, README update. Zero runtime changes. |
-| Next: PR 5 | CI pipeline — GitHub Actions (Linux PostgreSQL integration + Windows lint/unit/frontend build) |
-| After PR 5 | PR 4a (authentication), then PR 4b (frontend/API integration) |
-| New application | FastAPI foundation with health endpoints and a React frontend shell. In-browser transfer simulation is **demo only** — browser memory, resets on reload, not durable. |
+| PR 3H | ✅ Merged — ADR-0009 amendments, implementation roadmap, README update, repo hygiene |
+| PR 5 | ✅ Merged (GitHub PR #2) — Institutional Luxury website and operations console, frontend CI job |
+| PR 4a | ✅ Merged (GitHub PR #5) — Identity, RBAC, sessions, CSRF, and append-only audit trail |
+| PR 4b | 🔄 Active — Frontend auth integration, login/logout UI, same-origin Vite proxy, CORS removal, Windows CI job |
+| Next: PR 6a | Core banking domain — ledger accounts, double-entry journals, balanced postings |
+| Application | React frontend with real session auth (via Vite proxy to FastAPI backend). Transfers return HTTP 501 until PR 6a. |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
 
@@ -39,7 +41,7 @@ scripts/                  Cross-platform (Python) verification scripts
 
 ## Running both services with Docker Compose
 
-Run `python scripts/init_compose.py` to create local Compose credentials in the root `.env`. Existing files are preserved. From the repository root run `docker compose up --build`, then open <http://localhost:5173>. The browser reads FastAPI readiness at <http://localhost:8000/health/ready>. Source files are bind-mounted for Vite hot reload. Run `docker compose down` to stop the services.
+Run `python scripts/init_compose.py` to create local Compose credentials in the root `.env`. Existing files are preserved. From the repository root run `docker compose up --build`, then open <http://localhost:5173>. The browser interacts with the frontend on <http://localhost:5173>, which proxies `/api` and `/health` requests to the FastAPI backend with same-origin cookies and in-memory CSRF tokens. Direct CORS configuration has been removed. Source files are bind-mounted for Vite hot reload. Run `docker compose down` to stop the services.
 
 ## Running the new backend
 
@@ -104,11 +106,11 @@ The active delivery sequence (revised in PR 3H) is:
 | PR | Scope | Status |
 |---|---|---|
 | PR 3 | PostgreSQL foundation, Alembic, Compose, health endpoints | ✅ Merged |
-| PR 3H | ADR-0009 amendments, roadmap, README | 🔄 Active |
-| PR 5 | CI pipeline (Linux + Windows) | ⏳ Next |
-| PR 4a | Authentication — sessions, login, CSRF | ⏳ Queued |
-| PR 4b | Frontend / API integration, Vite proxy, CORS removal | ⏳ Queued |
-| PR 6a | Accounts, double-entry ledger, internal transfers | ⏳ Planned |
+| PR 3H | ADR-0009 amendments, roadmap, README | ✅ Merged |
+| PR 5 | Institutional Luxury UI & frontend CI | ✅ Merged |
+| PR 4a | Authentication — identity, sessions, CSRF, RBAC, audit | ✅ Merged |
+| PR 4b | Frontend auth integration, Vite proxy, CORS removal, Windows CI | 🔄 Active |
+| PR 6a | Accounts, double-entry ledger, internal transfers | ⏳ Next |
 | PR 6b | Corporate customer model (`customers` + `customer_members`) | ⏳ Planned |
 | PR 7a | Fund holds, available balance enforcement | ⏳ Planned |
 | PR 8 | External payments, clearing lifecycle, outbox worker | ⏳ Planned |
