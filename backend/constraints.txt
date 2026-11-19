@@ -6,6 +6,10 @@
 # Note: packages needed only on Windows (for example colorama) are not listed here, so pip
 # may pick their latest version there; they are not security-sensitive runtime dependencies.
 annotated-doc==0.0.6
+argon2-cffi==25.1.0
+argon2-cffi-bindings==26.2.0
+cffi==2.1.1
+pycparser==3.12
 annotated-types==0.8.0
 anyio==4.16.0
 ast_serialize==0.13.1

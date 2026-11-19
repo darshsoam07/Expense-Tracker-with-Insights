@@ -1,6 +1,7 @@
 """Run in the bootstrap container against a disposable local/CI PostgreSQL database.
 
-Migration round trips are destructive to the foundation revision. Stop the API first.
+Migration round trips are destructive (they drop and recreate the identity tables).
+Stop the API first.
 """
 
 import os
@@ -11,36 +12,68 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
-from app.db import database_ready, make_engine
+from app.db import SCHEMA_REVISION, database_ready, make_engine
+
+# "database" is the Compose service name; override it to run against another host:port.
+ADDRESS = os.environ.get("VERIFY_DB_ADDRESS", "database")
 
 runtime = make_engine(
     "postgresql+psycopg://ledgerops_runtime:"
     + os.environ["RUNTIME_PASSWORD"]
-    + "@database/ledgerops"
+    + f"@{ADDRESS}/ledgerops"
 )
 url = (
     "postgresql+psycopg://ledgerops_migrator:"
     + os.environ["MIGRATION_PASSWORD"]
-    + "@database/ledgerops"
+    + f"@{ADDRESS}/ledgerops"
 )
 migration = make_engine(url)
 environment = dict(os.environ, MIGRATION_DATABASE_URL=url)
-for target in ("head", "base", "head"):
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade" if target == "head" else "downgrade", target],
-        env=environment,
-        check=True,
-    )
-    if target == "head":
-        assert database_ready(runtime)
-    else:
-        with migration.connect() as connection:
-            assert (
-                connection.execute(
-                    text("SELECT count(*) FROM ledgerops.alembic_version")
-                ).scalar_one()
-                == 0
-            )
+
+
+def alembic(*arguments: str) -> None:
+    subprocess.run([sys.executable, "-m", "alembic", *arguments], env=environment, check=True)
+
+
+def revision() -> list[str]:
+    with migration.connect() as connection:
+        return list(
+            connection.execute(text("SELECT version_num FROM ledgerops.alembic_version")).scalars()
+        )
+
+
+def tables() -> set[str]:
+    with migration.connect() as connection:
+        return set(
+            connection.execute(
+                text("SELECT tablename FROM pg_tables WHERE schemaname = 'ledgerops'")
+            ).scalars()
+        )
+
+
+IDENTITY_TABLES = {
+    "users",
+    "roles",
+    "permissions",
+    "user_roles",
+    "role_permissions",
+    "sessions",
+    "audit_events",
+}
+# upgrade head -> downgrade -1 -> upgrade head (PR 4a requirement), then the full base round trip.
+alembic("upgrade", "head")
+assert database_ready(runtime)
+assert tables() >= IDENTITY_TABLES
+alembic("downgrade", "-1")
+assert revision() == ["0001_foundation"]
+assert not IDENTITY_TABLES & tables()
+alembic("upgrade", "head")
+assert database_ready(runtime)
+assert tables() >= IDENTITY_TABLES
+alembic("downgrade", "base")
+assert revision() == []
+alembic("upgrade", "head")
+assert database_ready(runtime)
 with migration.begin() as connection:
     assert int(connection.execute(text("SHOW server_version_num")).scalar_one()) // 10000 == 17
     connection.execute(text("CREATE TABLE ledgerops.integration_probe (value integer NOT NULL)"))
@@ -65,6 +98,27 @@ try:
             pass
         else:
             raise AssertionError("runtime permission unexpectedly granted")
+    # Audit rows are append-only: insert one, then prove UPDATE and DELETE fail for both roles.
+    with runtime.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO ledgerops.audit_events (occurred_at, actor_principal, action, outcome)"
+                " VALUES (now(), 'system:verify', 'verify.probe', 'success')"
+            )
+        )
+    for engine in (runtime, migration):
+        for statement in (
+            "UPDATE ledgerops.audit_events SET reason = 'tampered'",
+            "DELETE FROM ledgerops.audit_events",
+        ):
+            try:
+                with engine.begin() as connection:
+                    connection.execute(text(statement))
+            except DBAPIError as error:
+                reason = str(error.orig).splitlines()[0]
+                print(f"blocked as expected ({engine.url.username}): {reason}")
+            else:
+                raise AssertionError(f"audit row was changed by: {statement}")
     with migration.begin() as connection:
         connection.execute(text("UPDATE ledgerops.alembic_version SET version_num = 'wrong'"))
     assert not database_ready(runtime)
@@ -72,7 +126,8 @@ finally:
     with migration.begin() as connection:
         connection.execute(text("DROP TABLE ledgerops.integration_probe"))
         connection.execute(
-            text("UPDATE ledgerops.alembic_version SET version_num = '0001_foundation'")
+            text("UPDATE ledgerops.alembic_version SET version_num = :revision"),
+            {"revision": SCHEMA_REVISION},
         )
     runtime.dispose()
     migration.dispose()

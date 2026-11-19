@@ -127,7 +127,9 @@ Production services receive `SystemClock`. Tests inject `FakeClock`. No service 
 
 **Route frontend API requests through a Vite `/api` proxy in PR 4b** and remove the local CORS `allow_origins` allowance from the FastAPI application.
 
-This change is prerequisite for cookie-based sessions (ADR-0001): same-origin requests carry session cookies automatically; cross-origin requests require `credentials: 'include'` and liberal CORS, which is incompatible with the `SameSite=Strict` cookie policy.
+This change is prerequisite for cookie-based sessions (ADR-0001): same-origin requests carry session cookies automatically; cross-origin requests require `credentials: 'include'` and liberal CORS, which weakens the CORS posture. (Cookies are `SameSite=Lax`, as ADR-0001 specifies. Lax cookies are not sent on cross-site subrequests, so the same-origin arrangement is also what makes the session work.)
+
+**Correction (PR 4a review):** this paragraph originally said `SameSite=Strict`. ADR-0001 is authoritative and specifies `SameSite=Lax`; Strict would also drop the cookie on top-level navigations from other sites, such as following a link to the console. No decision to use Strict was made.
 
 PR 4a may keep a temporary CORS allowance for local development. PR 4b removes it. The production deployment (PR 10 or later) uses a reverse proxy (nginx or ALB) that serves both origins on the same domain.
 

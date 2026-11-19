@@ -11,12 +11,16 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api import API_V1_PREFIX
+from app.api.auth import me_router
+from app.api.auth import router as auth_router
+from app.api.deps import enforce_csrf
 from app.api.health import router as health_router
+from app.core.clock import Clock, SystemClock
 from app.core.config import Settings, load_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -27,8 +31,11 @@ from app.db import database_ready, make_engine
 logger = logging.getLogger("app")
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
-    """Build an application. Raises ConfigurationError if the settings are missing or insecure."""
+def create_app(settings: Settings | None = None, *, clock: Clock | None = None) -> FastAPI:
+    """Build an application. Raises ConfigurationError if the settings are missing or insecure.
+
+    `clock` lets tests control time; production uses the system clock.
+    """
     if settings is None:
         settings = load_settings()
     configure_logging(settings.log_level)
@@ -65,8 +72,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         docs_url=f"{API_V1_PREFIX}/docs" if docs_enabled else None,
         openapi_url=f"{API_V1_PREFIX}/openapi.json" if docs_enabled else None,
         redoc_url=None,
+        # CSRF protection applies to every state-changing route, including future ones.
+        dependencies=[Depends(enforce_csrf)],
     )
     app.state.settings = settings
+    app.state.engine = engine
+    app.state.clock = clock or SystemClock()
     app.state.readiness = readiness
 
     if settings.app_env == "local":
@@ -76,4 +87,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
     app.include_router(health_router)
+    app.include_router(auth_router)
+    app.include_router(me_router)
     return app
