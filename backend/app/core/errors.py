@@ -27,6 +27,7 @@ _STATUS_CODES = {
     415: "unsupported_media_type",
     422: "validation_error",
     429: "too_many_requests",
+    501: "not_implemented",
 }
 
 

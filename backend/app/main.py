@@ -12,7 +12,6 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api import API_V1_PREFIX
@@ -20,6 +19,7 @@ from app.api.auth import me_router
 from app.api.auth import router as auth_router
 from app.api.deps import enforce_csrf
 from app.api.health import router as health_router
+from app.api.transfers import router as transfers_router
 from app.core.clock import Clock, SystemClock
 from app.core.config import Settings, load_settings
 from app.core.errors import register_error_handlers
@@ -80,13 +80,10 @@ def create_app(settings: Settings | None = None, *, clock: Clock | None = None) 
     app.state.clock = clock or SystemClock()
     app.state.readiness = readiness
 
-    if settings.app_env == "local":
-        app.add_middleware(
-            CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["GET"]
-        )
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(me_router)
+    app.include_router(transfers_router)
     return app

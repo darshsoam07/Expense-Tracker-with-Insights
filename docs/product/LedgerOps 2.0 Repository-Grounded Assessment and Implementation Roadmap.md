@@ -1,22 +1,25 @@
 # LedgerOps 2.0 — Repository-Grounded Assessment and Implementation Roadmap
 
 **Document status:** Living reference — updated after each PR architect review.  
-**Last updated:** 2026-11-18 (PR 3H architect session)  
+**Last updated:** 2026-11-19 (PR 4b implementation session)  
 **Amends:** `docs/product/LEDGEROPS_2.0_BLUEPRINT.md` delivery sequencing; does not override product requirements.
 
 ---
 
-## Section 1 — Repository State as of PR 3H
+## Section 1 — Repository State as of PR 4b
 
-### 1.1 Verified branch state (2026-11-18)
+### 1.1 Verified branch state (2026-11-19)
 
-| Branch | Last verified SHA | Notes |
+| Milestone | PR / Branch | Notes |
 |---|---|---|
-| `main` | `5637e29` | Add LedgerOps frontend and local Compose stack |
-| `feat/postgresql-alembic-compose` | `0d6e7ab` | 0 commits ahead of main, 1 behind — must reconcile before PR 3 implementation resumes |
+| PR 3 | Merged | PostgreSQL 17, Alembic foundation migration, Docker Compose, health endpoints |
+| PR 3H | Merged | ADR-0009 amendments, roadmap docs, repo hygiene |
+| PR 5 | Merged (GitHub PR #2) | Institutional Luxury website and console, frontend CI job |
+| PR 4a | Merged (GitHub PR #5) | Identity, RBAC, sessions, CSRF, and append-only audit trail |
+| PR 4b | `feat/pr4b-frontend-auth-integration` | Frontend auth integration, Vite proxy, CORS removal, Windows CI |
 
 > [!IMPORTANT]
-> These SHAs are historical snapshots from the architect session. Always run `git log --oneline -5 main` before starting implementation work. Do not assume branch pointers are stable across sessions.
+> These SHAs and PR statuses are verified against git log and remote branches. Always run `git log --oneline -5 main` before starting implementation work.
 
 ### 1.2 Capability map (verified, not assumed)
 
@@ -24,18 +27,18 @@
 |---|---|---|
 | Legacy Flask + SQLite expense tracker | ✅ Preserved, runnable | `legacy/expense-tracker/` |
 | FastAPI health endpoints (`/health/live`, `/health/ready`) | ✅ Implemented | `backend/app/` |
-| Alembic foundation migration (schema + roles) | ✅ Implemented | `backend/alembic/` |
+| Alembic migrations (foundation + auth/sessions/audit) | ✅ Implemented | `backend/alembic/` |
 | Docker Compose local stack (PostgreSQL 17, backend, frontend) | ✅ Implemented | `docker-compose.yml` |
-| React frontend shell (Vite, TypeScript, Tailwind) | ✅ Early preview | `frontend/` |
-| In-browser transfer simulation | ⚠️ Demo only — browser memory, resets on reload | `frontend/` |
-| Authentication (sessions, login, JWT-free cookies) | ❌ Not implemented | Planned PR 4a |
+| Institutional Luxury website and operations console | ✅ Implemented | `frontend/` |
+| Authentication (sessions, login, JWT-free cookies, CSRF) | ✅ Implemented | `backend/app/api/auth.py`, `frontend/src/context/AuthContext.tsx` |
+| Same-origin Vite proxy (`/api`, `/health`) and CORS removal | ✅ Implemented | `frontend/vite.config.ts`, `backend/app/main.py` |
+| Transfer API | ⚠️ HTTP 501 Stub | `backend/app/api/transfers.py` (durable posting planned PR 6a) |
+| CI pipeline (GitHub Actions Linux + Windows) | ✅ Implemented | `.github/workflows/ci.yml` |
 | Account APIs (create, list, balance) | ❌ Not implemented | Planned PR 6a |
 | Double-entry ledger API | ❌ Not implemented | Planned PR 6a |
-| Transfer API (server-side, durable) | ❌ Not implemented | Planned PR 6a |
 | Customer / member model | ❌ Not implemented | Planned PR 6b |
 | Fund holds | ❌ Not implemented | Planned PR 7a |
 | External payments (clearing lifecycle) | ❌ Not implemented | Planned PR 8 |
-| CI pipeline (GitHub Actions) | ❌ Not implemented | Planned PR 5 |
 | Observability (structured logs, metrics, traces) | ❌ Not implemented | Planned Phase 3 |
 | Cloud deployment | ❌ Not implemented | Planned Phase 4+ |
 
@@ -98,21 +101,15 @@ Deliverables:
 
 ### PR 4a — Authentication layer
 
-**Scope:** FastAPI session management, login/logout endpoints, CSRF middleware, password hashing, session storage in PostgreSQL (`user_sessions` table per ADR-0005).
+**Status:** ✅ Merged (GitHub PR #5).
 
-Key constraints from ADR-0009:
-- Decision 1: merged after PR 5
-- Decision 12: temporary CORS allowance retained for local dev; removed in PR 4b
-- Decision 10: audit events written in same transaction as login/logout actions
-- Decision 11: `Clock` abstraction introduced here (login timestamp, session expiry)
+**Scope:** FastAPI session management, login/logout endpoints, CSRF middleware, password hashing, session storage in PostgreSQL (`user_sessions` table per ADR-0005), RBAC, and append-only audit trail.
 
-### PR 4b — Frontend / API integration
+### PR 4b — Frontend auth integration and Windows CI
 
-**Scope:** Vite `/api` proxy, removal of CORS allowance from FastAPI, replace browser-memory transfer simulation with API-backed stub (returns 501 until PR 6a).
+**Status:** 🔄 Active (`feat/pr4b-frontend-auth-integration`).
 
-Key constraints from ADR-0009:
-- Decision 12: same-origin API, `SameSite=Lax` cookie (ADR-0001; corrected from "Strict")
-- Decision 3: monetary amounts as decimal strings from this PR forward
+**Scope:** Vite `/api` and `/health` dev proxy, removal of CORS allowance from FastAPI, replace browser-memory transfer simulation with API-backed stub returning HTTP 501, React central API client and auth context, login/logout UI, and Windows CI workflow job.
 
 ### PR 6a — Accounts and ledger
 

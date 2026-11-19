@@ -76,13 +76,10 @@ export function useHealth() {
       let state = "Unavailable";
       let checks: Record<string, string> = {};
       try {
-        const response = await fetch(
-          (import.meta.env.VITE_API_BASE_URL ?? "") + "/health/ready",
-          {
-            cache: "no-store",
-            signal: AbortSignal.any([abort.signal, AbortSignal.timeout(5000)]),
-          },
-        );
+        const response = await fetch("/health/ready", {
+          cache: "no-store",
+          signal: AbortSignal.any([abort.signal, AbortSignal.timeout(5000)]),
+        });
         const body = await response.json();
         if (body.status === "ready" || body.status === "not_ready") {
           state =

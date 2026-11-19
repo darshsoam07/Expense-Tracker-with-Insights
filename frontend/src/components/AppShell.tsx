@@ -12,6 +12,7 @@ import {
   FileClock,
   GitCompareArrows,
   LayoutDashboard,
+  LogOut,
   Menu,
   Server,
   Settings,
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 import { Brand, StatusBadge } from "./ui";
 import type { Health } from "../model";
+import { useAuth } from "../context/AuthContext";
 
 export const destinations: {
   slug: string;
@@ -104,6 +106,7 @@ export function Sidebar({
   dismiss: () => void;
   hidden: boolean;
 }) {
+  const { user } = useAuth();
   return (
     <aside
       id="console-sidebar"
@@ -126,7 +129,7 @@ export function Sidebar({
         </span>
         <div>
           <strong>LedgerOps Workspace</strong>
-          <small>Sandbox environment</small>
+          <small>{user ? `${user.display_name} · ${user.roles[0] ?? "user"}` : "Sandbox environment"}</small>
         </div>
         <ChevronDown size={15} />
       </div>
@@ -164,12 +167,22 @@ export function Topbar({
   health: Health;
   toggle: () => void;
 }) {
+  const { user, status, logout } = useAuth();
   const location = useLocation();
   const current = destinations.find(
     (item) =>
       "/console/" + item.slug === location.pathname ||
       (item.slug === "" && location.pathname === "/console"),
   );
+  const initials = user
+    ? user.display_name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || user.email.slice(0, 2).toUpperCase()
+    : "";
+
   return (
     <header className="topbar">
       <div className="topbar-context">
@@ -203,9 +216,26 @@ export function Topbar({
         >
           <CircleHelp size={18} />
         </a>
-        <span className="avatar" title="Synthetic demo operator">
-          DO
-        </span>
+        {status === "authenticated" && user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="avatar" title={`${user.display_name} (${user.email})`}>
+              {initials}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 500, textTransform: "capitalize" }}>
+              {user.roles[0] ?? "user"}
+            </span>
+            <button
+              className="icon-button"
+              onClick={() => void logout()}
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        ) : (
+          <StatusBadge tone="neutral">Anonymous</StatusBadge>
+        )}
       </div>
     </header>
   );

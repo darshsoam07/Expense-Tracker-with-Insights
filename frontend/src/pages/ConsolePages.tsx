@@ -38,23 +38,20 @@ import {
   type Health,
 } from "../model";
 import { destinations } from "../components/AppShell";
+import { api, ApiError } from "../api";
+import { useAuth } from "../context/AuthContext";
 
 interface Props {
   entries: Entry[];
-  post: (entry: Entry) => void;
   reset: () => void;
   health: Health;
-  persona: string;
-  setPersona: (value: string) => void;
 }
 export function ConsolePages({
   entries,
-  post,
   reset,
   health,
-  persona,
-  setPersona,
 }: Props) {
+  const { user } = useAuth();
   const { section = "" } = useParams();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All statuses");
@@ -76,9 +73,9 @@ export function ConsolePages({
         )
       : visible;
   const totalVolume = filtered.reduce((sum, entry) => sum + entry.amount, 0);
-  const canTransfer = persona === "Operator demo";
+  const canTransfer = Boolean(user);
   const title = destinations.find((item) => item.slug === section)?.label;
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const input = event.currentTarget.elements.namedItem(
       "amount",
@@ -89,15 +86,46 @@ export function ConsolePages({
       input.reportValidity();
       return;
     }
-    post({
-      amount: cents,
-      source,
-      time: new Date().toISOString(),
-      key: crypto.randomUUID(),
-      id: "LO-" + crypto.randomUUID().slice(0, 8).toUpperCase(),
-      description: "Internal liquidity allocation",
-    });
-    setTransferOpen(false);
+    try {
+      await api.createTransfer({
+        amount: cents,
+        source,
+        destination: 1 - source,
+        description: "Internal liquidity allocation",
+      });
+      toast.success("Transfer submitted");
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      if (apiErr.status === 501 || apiErr.code === "not_implemented") {
+        toast.error("Transfers are not available yet.", {
+          description: "Financial transfer processing arrives in PR 6.",
+        });
+      } else {
+        toast.error(apiErr.message || "Failed to submit transfer");
+      }
+    } finally {
+      setTransferOpen(false);
+    }
+  }
+  async function replay(entry: Entry) {
+    try {
+      await api.createTransfer({
+        amount: entry.amount,
+        source: entry.source,
+        destination: 1 - entry.source,
+        description: entry.description,
+      });
+      toast.success("Transfer submitted");
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      if (apiErr.status === 501 || apiErr.code === "not_implemented") {
+        toast.error("Transfers are not available yet.", {
+          description: "Financial transfer processing arrives in PR 6.",
+        });
+      } else {
+        toast.error(apiErr.message || "Failed to submit transfer");
+      }
+    }
   }
   async function copy(key: string) {
     try {
@@ -145,7 +173,9 @@ export function ConsolePages({
         <h2>
           {section === "ledger" ? "Balanced journal" : "Recent transactions"}
         </h2>
-        <span className="subtle">Session demo data</span>
+        <span className="subtle">
+          Static demonstration data · Transfers unavailable until PR 6
+        </span>
       </div>
       {section !== "" && (
         <FilterBar
@@ -512,21 +542,24 @@ export function ConsolePages({
           description="Preferences for the local demo experience."
         />
         <section className="panel settings-panel">
-          <h2>Demo persona</h2>
+          <h2>Active operator profile</h2>
           <p>
-            This changes the UI preview. Authentication and server authorization
-            require PR 4 integration.
+            Authenticated operator identity provided by the identity service.
           </p>
-          <label>
-            Persona
-            <select
-              value={persona}
-              onChange={(event) => setPersona(event.target.value)}
-            >
-              <option>Operator demo</option>
-              <option>Auditor demo</option>
-            </select>
-          </label>
+          <div style={{ display: "grid", gap: 8, margin: "14px 0 20px" }}>
+            <div>
+              <span className="subtle">Display name: </span>
+              <strong>{user?.display_name || "—"}</strong>
+            </div>
+            <div>
+              <span className="subtle">Email: </span>
+              <strong className="numeric">{user?.email || "—"}</strong>
+            </div>
+            <div>
+              <span className="subtle">Assigned roles: </span>
+              <strong>{user?.roles?.join(", ") || "—"}</strong>
+            </div>
+          </div>
           <hr />
           <h2>Reset session data</h2>
           <p>Restore the original synthetic accounts and transfer journal.</p>
@@ -547,10 +580,8 @@ export function ConsolePages({
           description="Identity and access administration."
         />
         <section className="panel">
-          <EmptyState title="Authentication required">
-            User administration requires a backend authenticated session and
-            administrator permission. This public demo has no authenticated
-            operator.
+          <EmptyState title="User administration unavailable">
+            User administration endpoints are scheduled for subsequent governance milestones. Active session: {user?.email} ({user?.roles?.join(", ")}).
           </EmptyState>
         </section>
       </>
@@ -670,7 +701,7 @@ export function ConsolePages({
                 <Copy size={15} />
                 Copy key
               </button>
-              <button className="button primary" onClick={() => post(selected)}>
+              <button className="button primary" onClick={() => void replay(selected)}>
                 Replay request
               </button>
             </div>

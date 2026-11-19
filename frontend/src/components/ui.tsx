@@ -115,12 +115,20 @@ export function LoadingState() {
     </div>
   );
 }
-export function ErrorState({ retry }: { retry: () => void }) {
+export function ErrorState({
+  retry,
+  title = "Service unavailable",
+  children = "A readiness response could not be retrieved.",
+}: {
+  retry: () => void;
+  title?: string;
+  children?: ReactNode;
+}) {
   return (
     <div className="empty-state" role="alert">
       <CircleAlert />
-      <h3>Service unavailable</h3>
-      <p>A readiness response could not be retrieved.</p>
+      <h3>{title}</h3>
+      <p>{children}</p>
       <button className="button secondary" onClick={retry}>
         Try again
       </button>
