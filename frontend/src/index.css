@@ -2141,3 +2141,21 @@ dialog p {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+.financial-records {
+  padding: clamp(14px, 2vw, 22px);
+  overflow-wrap: anywhere;
+}
+
+.financial-records article {
+  padding-block: 12px;
+  border-bottom: 1px solid var(--lo-border);
+}
+
+.financial-records article:last-child {
+  border-bottom: 0;
+}
+
+.financial-records article p {
+  margin-block: 4px;
+}

@@ -379,3 +379,83 @@ def test_frozen_and_read_only_source(
             {"id": workspace.actor},
         )
     assert api.post("/api/v1/transfers", json=body, headers=headers).status_code == 201
+
+
+def test_multi_customer_membership_scopes_accounts_independently(
+    workspace: Workspace, api: TestClient, migrator_engine: Engine, make_user: UserFactory
+) -> None:
+    other = make_user(("operator",))
+    with Session(migrator_engine) as db, db.begin():
+        provision(db, other.id)
+        other_accounts = accounts(db, other.id)
+        customer = other_accounts[0]["customer_id"]
+        db.execute(
+            text("""INSERT INTO ledgerops.customer_members(customer_id,user_id,role)
+                    VALUES (:customer,:user,'viewer')"""),
+            {"customer": customer, "user": workspace.actor},
+        )
+
+    login(api, workspace.email)
+    own_ids = {str(workspace.src), str(workspace.dst)}
+    other_ids = {str(row["id"]) for row in other_accounts}
+    listed = api.get("/api/v1/accounts")
+    assert listed.status_code == 200
+    assert sorted(row["id"] for row in listed.json()) == sorted(own_ids | other_ids)
+    with migrator_engine.begin() as conn:
+        conn.execute(
+            text("""UPDATE ledgerops.customer_members SET active=false
+                    WHERE customer_id=:customer AND user_id=:user"""),
+            {"customer": customer, "user": workspace.actor},
+        )
+    assert sorted(row["id"] for row in api.get("/api/v1/accounts").json()) == sorted(own_ids)
+    for account_id in other_ids:
+        assert api.get(f"/api/v1/accounts/{account_id}").status_code == 404
+
+    api.cookies.clear()
+    login(api, other.email)
+    assert sorted(row["id"] for row in api.get("/api/v1/accounts").json()) == sorted(other_ids)
+    assert api.get(f"/api/v1/accounts/{workspace.src}/ledger").status_code == 404
+
+
+@pytest.mark.parametrize("closed_side", ["source", "destination"])
+def test_closed_account_rejects_transfer_without_financial_changes(
+    workspace: Workspace, api: TestClient, migrator_engine: Engine, closed_side: str
+) -> None:
+    closed_id = workspace.src if closed_side == "source" else workspace.dst
+    with migrator_engine.begin() as conn:
+        conn.execute(
+            text("UPDATE ledgerops.accounts SET status='closed' WHERE id=:id"), {"id": closed_id}
+        )
+
+    def snapshot() -> tuple[object, ...]:
+        with Session(migrator_engine) as db:
+            return (
+                db.scalar(
+                    text("SELECT count(*) FROM ledgerops.transfers WHERE actor_id=:actor"),
+                    {"actor": workspace.actor},
+                ),
+                db.scalar(
+                    text("SELECT count(*) FROM ledgerops.journal_entries WHERE actor_id=:actor"),
+                    {"actor": workspace.actor},
+                ),
+                sorted(
+                    (str(a["id"]), str(a["ledger_balance"]), str(a["available_balance"]))
+                    for a in accounts(db, workspace.actor)
+                ),
+            )
+
+    before = snapshot()
+    token = login(api, workspace.email)["csrf_token"]
+    response = api.post(
+        "/api/v1/transfers",
+        json={
+            "source_id": str(workspace.src),
+            "destination_id": str(workspace.dst),
+            "amount": "1.00",
+            "currency": "INR",
+        },
+        headers={"X-CSRF-Token": str(token), "Idempotency-Key": "closed-account"},
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "account_unavailable"
+    assert snapshot() == before

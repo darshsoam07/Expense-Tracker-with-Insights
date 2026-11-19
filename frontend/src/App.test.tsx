@@ -7,6 +7,8 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { App } from "./App";
+import { api } from "./api";
+import workspaceStyles from "./index.css?raw";
 import { balancesFor, initialEntries } from "./model";
 
 const mockOperator = {
@@ -198,7 +200,7 @@ test("logout clears session and returns to login form", async () => {
   });
 });
 
-test("internal transfer sends exact decimal text, CSRF and an idempotency key", async () => {
+test("ambiguous transfer retry preserves decimal body, CSRF and idempotency key", async () => {
   window.history.replaceState({}, "", "/console/transfers");
   render(<App />);
   fireEvent.click(
@@ -214,16 +216,26 @@ test("internal transfer sends exact decimal text, CSRF and an idempotency key", 
   fireEvent.change(dialog.getByLabelText(/Amount.*INR/), {
     target: { value: "1.20" },
   });
+  vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Connection lost"));
+  fireEvent.click(dialog.getByRole("button", { name: "Post internal transfer" }));
+  expect((await dialog.findByRole("alert")).textContent).toBe("Connection lost");
+  expect((dialog.getByLabelText(/Amount.*INR/) as HTMLInputElement).value).toBe("1.20");
   fireEvent.click(
     dialog.getByRole("button", { name: "Post internal transfer" }),
   );
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  const call = vi
+  const requests = vi
     .mocked(fetch)
-    .mock.calls.find(
+    .mock.calls.filter(
       ([path, options]) =>
         path === "/api/v1/transfers" && options?.method === "POST",
     );
+  expect(requests).toHaveLength(2);
+  const [call, retry] = requests;
+  expect(retry[1]?.body).toBe(call[1]?.body);
+  expect(new Headers(retry[1]?.headers).get("Idempotency-Key")).toBe(
+    new Headers(call[1]?.headers).get("Idempotency-Key"),
+  );
   expect(JSON.parse(String(call?.[1]?.body)).amount).toBe("1.20");
   const headers = new Headers(call?.[1]?.headers);
   expect(headers.get("Idempotency-Key")).toBeTruthy();
@@ -264,4 +276,49 @@ test("unavailable health is rendered with retry button", async () => {
     expect(screen.getByText("Service unavailable")).toBeTruthy();
   });
   expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+});
+
+test("a pending transfer survives Escape and announces rejection inside the dialog", async () => {
+  window.history.replaceState({}, "", "/console/transfers");
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: "New internal transfer" }));
+  const element = screen.getByRole("dialog");
+  const dialog = within(element);
+  fireEvent.change(dialog.getByLabelText("Source account"), { target: { value: "First" } });
+  fireEvent.change(dialog.getByLabelText("Destination account"), { target: { value: "Second" } });
+  fireEvent.change(dialog.getByLabelText(/Amount.*INR/), { target: { value: "9.00" } });
+  let finish!: (value: Response) => void;
+  vi.mocked(fetch).mockReturnValueOnce(new Promise<Response>((resolve) => { finish = resolve; }));
+  fireEvent.click(dialog.getByRole("button", { name: "Post internal transfer" }));
+  await dialog.findByText(/Posting/);
+  const cancel = new Event("cancel", { bubbles: false, cancelable: true });
+  fireEvent(element, cancel);
+  expect(cancel.defaultPrevented).toBe(true);
+  expect(screen.getByRole("dialog")).toBe(element);
+  finish(new Response(JSON.stringify({ error: { code: "insufficient_funds", message: "Insufficient funds" } }), {status: 409}));
+  expect((await dialog.findByRole("alert")).textContent).toBe("Insufficient funds");
+  expect(dialog.getByRole("button", { name: "Post internal transfer" })).toBeTruthy();
+});
+
+test("ledger preserves long narration and displays decimal text in financial typography", async () => {
+  const style = document.createElement("style");
+  // JSDOM cannot resolve Vite's stylesheet imports; these component rules are local.
+  style.textContent = workspaceStyles.replace(/^@import.*$/gm, "");
+  document.head.append(style);
+  const description = "A".repeat(255);
+  const ledger = vi.spyOn(api, "ledger").mockResolvedValue([{
+    id: "posting", reference: "journal", posted_at: "2026-11-19T00:00:00Z",
+    description, direction: "debit", currency: "INR", amount: "1.20",
+  }]);
+  try {
+    window.history.replaceState({}, "", "/console/ledger");
+    render(<App />);
+    const amount = await screen.findByText("INR 1.20");
+    expect(getComputedStyle(amount).fontVariantNumeric).toBe("tabular-nums");
+    expect(getComputedStyle(amount.closest("section")!).overflowWrap).toBe("anywhere");
+    expect(amount.closest("article")?.textContent).toContain(description);
+  } finally {
+    style.remove();
+    ledger.mockRestore();
+  }
 });

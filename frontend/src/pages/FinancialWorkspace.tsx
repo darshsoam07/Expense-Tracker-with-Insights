@@ -22,6 +22,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const attempt = useRef<{ payload: string; key: string } | null>(null);
@@ -33,6 +34,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
     description: "",
   });
   function edit(field: keyof TransferCommand, value: string) {
+    setSubmitError("");
     attempt.current = null;
     setCommand((previous) => ({ ...previous, [field]: value }));
   }
@@ -77,6 +79,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
     if (attempt.current?.payload !== payload)
       attempt.current = { payload, key: crypto.randomUUID() };
     pending.current = true;
+    setSubmitError("");
     setBusy(true);
     try {
       const transfer = await api.createTransfer(command, attempt.current.key);
@@ -89,7 +92,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
       setOffset(0);
       refresh((previous) => previous + 1);
     } catch (e) {
-      toast.error(
+      setSubmitError(
         e instanceof Error ? e.message : "Transfer could not be confirmed.",
       );
     } finally {
@@ -125,17 +128,17 @@ export function FinancialWorkspace({ section }: { section: string }) {
       ) : (
         <>
           {detail && (
-            <section className="panel">
+            <section className="panel financial-records">
               <h2>Account detail</h2>
               <code>{detail.reference}</code>
               <p>
                 {detail.customer_name} · {detail.status}
               </p>
               <p>
-                Ledger balance {detail.currency} {detail.ledger_balance}
+                Ledger balance <span className="numeric">{detail.currency} {detail.ledger_balance}</span>
               </p>
               <p>
-                Available balance {detail.currency} {detail.available_balance}
+                Available balance <span className="numeric">{detail.currency} {detail.available_balance}</span>
               </p>
               <button onClick={() => select("")}>Close detail</button>
             </section>
@@ -166,7 +169,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
           )}
           {!accounts.length && <p>No accounts available to this user.</p>}
           {section === "ledger" && accounts.length > 0 && (
-            <section className="panel">
+            <section className="panel financial-records">
               <label>
                 Account{" "}
                 <select
@@ -187,7 +190,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
                 <article key={p.id}>
                   <code>{p.reference}</code>
                   <p>
-                    {p.description} · {p.direction} · {p.currency} {p.amount}
+                    {p.description} · {p.direction} · <span className="numeric">{p.currency} {p.amount}</span>
                   </p>
                   <time>{p.posted_at}</time>
                 </article>
@@ -196,7 +199,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
             </section>
           )}
           {section === "transfers" && (
-            <section className="panel">
+            <section className="panel financial-records">
               <h2>Transfer history</h2>
               {user?.permissions.includes("transfers.create") && (
                 <button
@@ -211,7 +214,7 @@ export function FinancialWorkspace({ section }: { section: string }) {
                 <article key={t.id}>
                   <code>{t.journal_reference}</code>
                   <p>
-                    {t.status} · {t.currency} {t.amount}
+                    {t.status} · <span className="numeric">{t.currency} {t.amount}</span>
                   </p>
                   <time>{t.created_at}</time>
                 </article>
@@ -239,11 +242,15 @@ export function FinancialWorkspace({ section }: { section: string }) {
       <ConfirmationDialog
         open={open}
         close={() => {
-          if (!pending.current) setOpen(false);
+          if (!pending.current) {
+            setOpen(false);
+            setSubmitError("");
+          }
         }}
         title="Internal transfer"
       >
         <form onSubmit={submit}>
+          {submitError && <p role="alert">{submitError}</p>}
           <fieldset disabled={busy}>
             <label>
               Source account
