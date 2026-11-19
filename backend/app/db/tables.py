@@ -170,6 +170,7 @@ account_balances = Table(
     Column("ledger_id", Uuid, primary_key=True),
     Column("currency", Text, nullable=False),
     Column("ledger_balance", Numeric(18, 2), nullable=False),
+    Column("held_amount", Numeric(18, 2), nullable=False),
     Column("available_balance", Numeric(18, 2)),
     Column("updated_at", DateTime(timezone=True), nullable=False),
 )
@@ -215,4 +216,42 @@ transfers = Table(
     Column("journal_id", Uuid, nullable=False),
     Column("status", Text, nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+account_holds = Table(
+    "account_holds",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("account_id", Uuid, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("original_amount", Numeric(18, 2), nullable=False),
+    Column("remaining", Numeric(18, 2), nullable=False),
+    Column("status", Text, nullable=False),
+    Column("reason", Text, nullable=False),
+    Column("business_reference", Text),
+    Column("creator", Uuid, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
+    Column("expires_at", DateTime(timezone=True)),
+)
+
+hold_events = Table(
+    "hold_events",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("hold_id", Uuid, nullable=False),
+    Column("account_id", Uuid, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("amount", Numeric(18, 2), nullable=False),
+    Column("remaining", Numeric(18, 2), nullable=False),
+    Column("occurred_at", DateTime(timezone=True), nullable=False),
+    Column("actor", Uuid),
+    Column("command", Text, nullable=False),
+    Column("key", Text),
+    Column("digest", Text),
+    Column("reason", Text),
+    Column("business_reference", Text),
+    Column("expires_at", DateTime(timezone=True)),
+    Column("journal_id", Uuid),
 )

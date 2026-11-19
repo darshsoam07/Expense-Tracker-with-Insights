@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session
 
-SCHEMA_REVISION = "0003_financial_integrity"
+SCHEMA_REVISION = "0004_account_holds"
 
 
 def make_engine(url: str) -> Engine:
