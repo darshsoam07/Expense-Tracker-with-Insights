@@ -16,8 +16,8 @@ registration endpoint, no password reset, no MFA. The local CORS rule stays unti
 | Login, logout, sessions, RBAC, first-admin CLI | `app/modules/auth/` |
 | Routes and dependencies | `app/api/auth.py`, `app/api/deps.py` |
 
-Endpoints: `GET /api/v1/auth/csrf`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`,
-`GET /api/v1/auth/me`.
+Endpoints: `GET /api/v1/auth/csrf`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` and
+`GET /api/v1/me` (the canonical current-user path in ADR-0001 and the Phase 1 plan).
 
 ## Behaviour worth knowing
 
@@ -49,21 +49,46 @@ Endpoints: `GET /api/v1/auth/csrf`, `POST /api/v1/auth/login`, `POST /api/v1/aut
   with the password in `LEDGEROPS_BOOTSTRAP_PASSWORD` (or prompted). Audited as
   `system:bootstrap-cli`.
 
-## Deviations from earlier text, and why
+## Contract alignment (ADR-0001, ADR-0009, Phase 1 plan)
 
-1. **Routes are under `/api/v1/auth/...`**, following the repository's versioned prefix and
-   ADR-0001, not `/api/auth/...`.
-2. **`SameSite=Lax`**, as ADR-0001 specifies. ADR-0009 decision 12 says `Strict`; that looks
-   like a typo and should be corrected in a docs PR.
-3. **Cookies use `Path=/`**, because the `__Host-` prefix required in secure mode forces it.
-   ADR-0001 mentions a narrower path for the CSRF cookie, which the prefix rules out.
-4. **`sessions` has two extra columns**: `id` and `last_seen_at` (needed for the idle timeout).
-5. **Only four permissions exist** (`users.read`, `users.manage`, `audit.read`,
-   `platform.read`). Permissions arrive with the feature that uses them, through a migration.
-   The five roles requested exist now.
-6. **Import-linter** gained two layers (`modules`, `db`) between `api` and `core`, so the
-   contract reads `main -> api -> modules -> db -> core`, plus two forbidden-import contracts.
-7. **Argon2:** adds `argon2-cffi` (pinned, with its bindings, in `constraints.txt`).
+1. **Current user is `GET /api/v1/me`**, as ADR-0001 (steps 6 and 7) and the Phase 1 route table
+   and authorization matrix specify. There is no `/api/v1/auth/me`.
+2. **`SameSite=Lax`**, as ADR-0001 specifies. ADR-0009 decision 12 said `Strict`; that was a
+   slip, now corrected in place with a note. No decision to use Strict was made.
+3. **Both cookies use `Path=/`.** The `__Host-` prefix, required whenever `COOKIE_SECURE` is true,
+   is only accepted by browsers with `Path=/`, so the narrower `Path=/api/v1/auth` in the earlier
+   ADR-0001 text cannot work. ADR-0001 carries the correction and the reasoning.
+4. **Roles.** The Phase 1 plan named `customer`, `operations` and `admin`. PR 4a seeds `admin`,
+   `operator`, `approver`, `auditor` and `viewer`, as requested. `operator` corresponds to
+   `operations`. `customer` and `GET /api/v1/customers/me` arrive with the customer model
+   (PR 6b). Registration and `GET /api/v1/ops/ping` are not part of PR 4a; the role-gate
+   behaviour they would show is covered by tests that mount a probe route.
+
+## Role and permission mapping (explicit, least privilege)
+
+Every grant is listed; nothing is inherited. A permission added later reaches no role until a
+migration and `policy.py` both grant it.
+
+| Role | Permissions |
+|---|---|
+| admin | `users.read`, `users.manage`, `audit.read`, `platform.read` |
+| operator | `platform.read` |
+| approver | `platform.read` |
+| auditor | `audit.read`, `platform.read` |
+| viewer | `platform.read` |
+
+`platform.read` (service health, non-sensitive) is the baseline. User administration is
+admin-only. Operator and approver gain working permissions with the features that need them:
+transfers (PR 6) and approvals (PR 7a). The auditor reads the audit trail; the audit API in PR 4b
+will include actor display details, so it needs no `users.read`.
+
+## Other deviations
+
+- `sessions` has two extra columns, `id` and `last_seen_at`, for the idle timeout.
+- Only four permissions exist; permissions arrive with their features, through a migration.
+- Import-linter gained layers `modules` and `db`, so the contract reads
+  `main -> api -> modules -> db -> core`, plus two forbidden-import contracts.
+- Adds `argon2-cffi` (pinned, with its bindings, in `constraints.txt`).
 
 ## Verifying locally
 

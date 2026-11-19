@@ -21,7 +21,7 @@ The browser app and the API are served from one origin: an NGINX container local
 *Before login or registration (anonymous visitor):*
 
 1. On startup the frontend calls `GET /api/v1/auth/csrf` (a safe, side-effect-free request).
-2. The server generates `r = <issued_at>.<32 random bytes>`, sets it in a cookie (`HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth; Max-Age=3600`), and returns `{ "csrf_token": HMAC_SHA256(csrf_key, r) }` in the body. `csrf_key` is derived from `SECRET_KEY` and is never sent to the client.
+2. The server generates `r = <issued_at>.<32 random bytes>`, sets it in a cookie (`HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`), and returns `{ "csrf_token": HMAC_SHA256(csrf_key, r) }` in the body. `csrf_key` is derived from `SECRET_KEY` and is never sent to the client.
 3. The frontend keeps the token **in memory only** (never `localStorage`) and sends it as `X-CSRF-Token` on `POST /api/v1/auth/register` and `POST /api/v1/auth/login`.
 4. The server recomputes the HMAC from the cookie value `r`, compares it to the header with a constant-time comparison, and rejects if it differs or if `issued_at` is older than one hour. An attacker on another site can neither read the cookie nor compute the HMAC, so cannot forge the header. This also blocks "login CSRF".
 
@@ -41,7 +41,9 @@ The browser app and the API are served from one origin: an NGINX container local
 | Idle timeout (30 min) or absolute lifetime (8 h) | Session invalid; the next request gets `401` |
 | Failed CSRF check | `403` with error code `csrf_failed`; the event is written to the audit log |
 
-Cookie names: when `COOKIE_SECURE` is true, the `__Host-` prefix is used (forces `Secure`, `Path=/`, no `Domain`). On plain-HTTP local development (`APP_ENV=local` only) the prefix is omitted, because browsers reject `__Host-` cookies without `Secure`.
+Cookie names: when `COOKIE_SECURE` is true, the `__Host-` prefix is used (forces `Secure`, `Path=/`, no `Domain`).
+
+**Correction (PR 4a review): both cookies use `Path=/`.** An earlier draft scoped the anonymous CSRF cookie to `Path=/api/v1/auth`. A `__Host-` cookie is only accepted by the browser when it has `Path=/`, so a narrower path is impossible in secure mode. For consistency the same cookie attributes apply in plain-HTTP local development. This costs little: the anonymous CSRF cookie is `HttpOnly`, short-lived (1 hour), carries no identity, is useless without the HMAC key, and is cleared at login. The session cookie also uses `Path=/`. `SameSite=Lax` is the policy for both (see ADR-0009, decision 12, corrected). On plain-HTTP local development (`APP_ENV=local` only) the prefix is omitted, because browsers reject `__Host-` cookies without `Secure`.
 
 > This is a design, not an implementation. It will be implemented and tested in PR 4 and PR 5. Until those tests exist, nothing here is verified.
 

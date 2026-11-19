@@ -1,6 +1,5 @@
-"""Authentication endpoints: CSRF bootstrap, login, logout and the current user.
-
-Paths sit under the versioned prefix (/api/v1/auth/...), like every application route.
+"""Authentication endpoints: CSRF bootstrap, login and logout under /api/v1/auth, and the
+current user at GET /api/v1/me (ADR-0001, Phase 1 plan). All paths use the versioned prefix.
 """
 
 from uuid import UUID
@@ -29,6 +28,8 @@ from app.core.security import (
 from app.modules.auth.rbac import effective_permissions, roles_for_user
 
 router = APIRouter(prefix=f"{API_V1_PREFIX}/auth", tags=["auth"])
+# ADR-0001 and the Phase 1 plan define the current-user endpoint as GET /api/v1/me.
+me_router = APIRouter(prefix=API_V1_PREFIX, tags=["auth"])
 
 _NO_STORE = {"Cache-Control": "no-store"}
 
@@ -135,7 +136,7 @@ def logout(
     return response
 
 
-@router.get("/me", response_model=AuthState)
+@me_router.get("/me", response_model=AuthState)
 def me(response: Response, db: DbSession, active: CurrentSession) -> AuthState:
     response.headers.update(_NO_STORE)
     return AuthState(

@@ -103,3 +103,32 @@ def test_application_code_never_reads_the_wall_clock_directly() -> None:
         if path.name != "clock.py" and pattern.search(path.read_text(encoding="utf-8"))
     ]
     assert offenders == []
+
+
+def test_every_role_has_an_explicit_non_empty_grant() -> None:
+    for role in Role:
+        assert ROLE_PERMISSIONS[role], role
+
+
+def test_role_grants_follow_least_privilege() -> None:
+    holders = {
+        permission: {role for role, granted in ROLE_PERMISSIONS.items() if permission in granted}
+        for permission in Permission
+    }
+    assert holders[Permission.USERS_MANAGE] == {Role.ADMIN}
+    assert holders[Permission.USERS_READ] == {Role.ADMIN}
+    assert holders[Permission.AUDIT_READ] == {Role.ADMIN, Role.AUDITOR}
+    assert holders[Permission.PLATFORM_READ] == set(Role)
+    for role in (Role.OPERATOR, Role.APPROVER, Role.VIEWER):
+        assert ROLE_PERMISSIONS[role] == {Permission.PLATFORM_READ}
+
+
+def test_admin_grants_are_listed_not_inherited() -> None:
+    """A newly added Permission must not reach admin (or anyone) without an explicit grant."""
+    assert ROLE_PERMISSIONS[Role.ADMIN] == {
+        Permission.USERS_READ,
+        Permission.USERS_MANAGE,
+        Permission.AUDIT_READ,
+        Permission.PLATFORM_READ,
+    }
+    assert set().union(*ROLE_PERMISSIONS.values()) == set(Permission)

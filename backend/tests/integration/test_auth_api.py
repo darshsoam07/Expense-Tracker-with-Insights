@@ -16,7 +16,7 @@ from tests.helpers import FakeClock, make_settings
 from tests.integration.conftest import _RUNTIME_URL, PASSWORD, TestUser, UserFactory, login
 
 LOGIN = "/api/v1/auth/login"
-ME = "/api/v1/auth/me"
+ME = "/api/v1/me"
 LOGOUT = "/api/v1/auth/logout"
 CSRF = "/api/v1/auth/csrf"
 

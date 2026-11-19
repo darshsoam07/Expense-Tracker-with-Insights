@@ -111,7 +111,7 @@ Key constraints from ADR-0009:
 **Scope:** Vite `/api` proxy, removal of CORS allowance from FastAPI, replace browser-memory transfer simulation with API-backed stub (returns 501 until PR 6a).
 
 Key constraints from ADR-0009:
-- Decision 12: same-origin API, `SameSite=Strict` cookie
+- Decision 12: same-origin API, `SameSite=Lax` cookie (ADR-0001; corrected from "Strict")
 - Decision 3: monetary amounts as decimal strings from this PR forward
 
 ### PR 6a — Accounts and ledger

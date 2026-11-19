@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api import API_V1_PREFIX
+from app.api.auth import me_router
 from app.api.auth import router as auth_router
 from app.api.deps import enforce_csrf
 from app.api.health import router as health_router
@@ -87,4 +88,5 @@ def create_app(settings: Settings | None = None, *, clock: Clock | None = None) 
     register_error_handlers(app)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(me_router)
     return app
