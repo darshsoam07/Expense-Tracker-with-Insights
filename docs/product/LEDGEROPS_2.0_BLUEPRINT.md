@@ -1,6 +1,6 @@
 # LedgerOps 2.0 â€” Product, Experience, and Engineering Blueprint
 
-**Delivery update, 20 November 2026.** PR 6a and PR 7a merged in GitHub PRs #7 and #8. The local PR 7b branch uses account holds for independent review of internal transfers. The earlier baseline below is historical. See [ADR 0012](../architecture/adr/0012-transfer-approvals.md).
+**Delivery update, 20 November 2026.** PR 6a, PR 7a and PR 7b merged in GitHub PRs #7, #8 and #9. The local PR 7c branch adds reserved payment instructions with deterministic simulated rail outcomes. The earlier baseline below is historical. See [ADR 0013](../architecture/adr/0013-simulated-payment-rails.md).
 
 **Status:** Approved product direction for implementation planning  
 **Product:** LedgerOps  

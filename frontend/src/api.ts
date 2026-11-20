@@ -125,6 +125,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  payments: (offset: number) =>
+    request<Payment[]>(`/api/v1/payments?limit=25&offset=${offset}`),
+  payment: (id: string) => request<Payment>(`/api/v1/payments/${id}`),
+  createPayment: (body: PaymentCommand, key: string) =>
+    request<Payment>("/api/v1/payments", {
+      method: "POST",
+      headers: { "Idempotency-Key": key },
+      body: JSON.stringify(body),
+    }),
+  submitPayment: (id: string) =>
+    request<Payment>(`/api/v1/payments/${id}/submit`, { method: "POST" }),
+  cancelPayment: (id: string) =>
+    request<Payment>(`/api/v1/payments/${id}/cancel`, { method: "POST" }),
   approvals: (offset: number) => request<Approval[]>(`/api/v1/approvals?offset=${offset}`),
   approval: (id: string) => request<Approval>(`/api/v1/approvals/${id}`),
   decide: (id: string, choice: "approve"|"reject", reason: string) =>
@@ -200,6 +213,25 @@ export const api = {
 };
 
 export type Money = string;
+export interface PaymentCommand {
+  source_id: string;
+  beneficiary_name: string;
+  destination_reference: string;
+  customer_reference: string;
+  amount: Money;
+  currency: "INR";
+}
+export interface PaymentEvent {
+  id: string; kind: string; actor: string | null; occurred_at: string;
+  provider_reference: string | null; detail: string | null; correlation_id: string | null;
+}
+export interface Payment {
+  id: string; customer_id: string; source_id: string; actor_id: string;
+  customer_reference: string; beneficiary_name: string; destination_reference: string;
+  amount: Money; currency: string; rail: "SIMULATED_INR"; status: string;
+  hold_id: string; approval_id: string | null; approval_status?: string | null; provider_reference: string;
+  created_at: string; updated_at: string; events?: PaymentEvent[];
+}
 export interface Approval {
   id:string; maker:string; maker_name:string; source_id:string; destination_id:string;
   amount:string; currency:string; status:string; required_count:number; hold_status:string;

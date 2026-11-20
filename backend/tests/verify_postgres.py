@@ -70,6 +70,10 @@ assert {
     "approval_decisions",
     "approval_events",
 } <= tables()
+assert {"payment_instructions", "payment_events"} <= tables()
+alembic("downgrade", "-1")
+assert revision() == ["0006_approval_grants"]
+assert "payment_instructions" not in tables()
 alembic("downgrade", "-1")
 assert revision() == ["0005_transfer_approvals"]
 alembic("downgrade", "-1")

@@ -136,6 +136,15 @@ def expire_locked(
             values,
         )
         db.execute(
+            text("""INSERT INTO ledgerops.payment_events
+            SELECT gen_random_uuid(),subject_id,'cancelled',NULL,:now,provider_reference,
+              'Approval expired before rail submission',:request
+            FROM ledgerops.approval_requests r JOIN ledgerops.payment_instructions p
+              ON p.id=r.subject_id WHERE r.id=:id AND r.subject_type='payment'
+              AND p.status='pending_approval'"""),
+            values,
+        )
+        db.execute(
             text("""INSERT INTO ledgerops.approval_events
             VALUES(:event,:id,'expired',NULL,:now,:request)"""),
             values,
@@ -229,10 +238,12 @@ def receipt(db: Session, actor: UUID, command: str, key: str, digest: str) -> di
 def require_unassigned(db: Session, hold: UUID) -> None:
     if db.scalar(
         text("""SELECT EXISTS(SELECT FROM ledgerops.approval_requests
-        WHERE hold_id=:hold AND status='pending_approval')"""),
+        WHERE hold_id=:hold AND status='pending_approval') OR EXISTS(
+        SELECT FROM ledgerops.payment_instructions WHERE hold_id=:hold
+        AND status NOT IN ('failed','cancelled'))"""),
         {"hold": hold},
     ):
-        raise AppError(409, "hold_reserved", "Reservation belongs to a pending approval.")
+        raise AppError(409, "hold_reserved", "Reservation belongs to a financial instruction.")
 
 
 def may_release(role: str, actor: UUID, creator: UUID) -> bool:
