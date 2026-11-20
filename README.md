@@ -8,7 +8,7 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | PR 7a account holds in local review |
+| Phase | PR 7a merged in #8. PR 7b adds independent transfer review in the local feature branch. See [ADR 0012](docs/architecture/adr/0012-transfer-approvals.md). |
 | PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
 | PR 3H | ✅ Merged — ADR-0009 amendments, implementation roadmap, README update, repo hygiene |
 | PR 5 | ✅ Merged (GitHub PR #2) — Institutional Luxury website and operations console, frontend CI job |

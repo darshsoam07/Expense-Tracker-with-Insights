@@ -255,3 +255,67 @@ hold_events = Table(
     Column("expires_at", DateTime(timezone=True)),
     Column("journal_id", Uuid),
 )
+
+approval_policies = Table(
+    "approval_policies",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("version", Integer, primary_key=True),
+    Column("customer_id", Uuid, nullable=False),
+    Column("name", Text, nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("minimum", Numeric(18, 2), nullable=False),
+    Column("maximum", Numeric(18, 2)),
+    Column("required_count", Integer, nullable=False),
+    Column("ttl_seconds", Integer),
+    Column("active", Boolean, nullable=False),
+    Column("recorded_at", DateTime(timezone=True), nullable=False),
+    Column("actor", Uuid, nullable=False),
+)
+
+approval_requests = Table(
+    "approval_requests",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("subject_type", Text, nullable=False),
+    Column("subject_id", Uuid, nullable=False),
+    Column("maker", Uuid, nullable=False),
+    Column("customer_id", Uuid, nullable=False),
+    Column("policy_id", Uuid, nullable=False),
+    Column("policy_version", Integer, nullable=False),
+    Column("source_id", Uuid, nullable=False),
+    Column("destination_id", Uuid, nullable=False),
+    Column("amount", Numeric(18, 2), nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("description", Text, nullable=False),
+    Column("payload_hash", Text, nullable=False),
+    Column("idempotency_key", Text, nullable=False),
+    Column("hold_id", Uuid, nullable=False),
+    Column("original_hold_id", Uuid),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("expires_at", DateTime(timezone=True)),
+    Column("status", Text, nullable=False),
+    Column("completed_at", DateTime(timezone=True)),
+)
+
+approval_decisions = Table(
+    "approval_decisions",
+    metadata,
+    Column("request_id", Uuid, primary_key=True),
+    Column("maker", Uuid, nullable=False),
+    Column("actor", Uuid, primary_key=True),
+    Column("decision", Text, nullable=False),
+    Column("reason", Text, nullable=False),
+    Column("decided_at", DateTime(timezone=True), nullable=False),
+)
+
+approval_events = Table(
+    "approval_events",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("request_id", Uuid, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("actor", Uuid),
+    Column("occurred_at", DateTime(timezone=True), nullable=False),
+    Column("correlation_id", Text),
+)

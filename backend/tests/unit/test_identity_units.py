@@ -122,13 +122,19 @@ def test_role_grants_follow_least_privilege() -> None:
     assert holders[Permission.TRANSFERS_CREATE] == {Role.ADMIN, Role.OPERATOR}
     for permission in (Permission.ACCOUNTS_READ, Permission.LEDGER_READ):
         assert holders[permission] == {Role.ADMIN, Role.OPERATOR, Role.AUDITOR}
-    for role in (Role.APPROVER, Role.VIEWER):
-        assert ROLE_PERMISSIONS[role] == {Permission.PLATFORM_READ}
+    assert ROLE_PERMISSIONS[Role.VIEWER] == {Permission.PLATFORM_READ}
+    assert ROLE_PERMISSIONS[Role.APPROVER] == {
+        Permission.PLATFORM_READ,
+        Permission.APPROVALS_READ,
+        Permission.APPROVALS_DECIDE,
+    }
 
 
 def test_admin_grants_are_listed_not_inherited() -> None:
     """A newly added Permission must not reach admin (or anyone) without an explicit grant."""
     assert ROLE_PERMISSIONS[Role.ADMIN] == {
+        Permission.APPROVALS_READ,
+        Permission.APPROVALS_DECIDE,
         Permission.ACCOUNTS_READ,
         Permission.LEDGER_READ,
         Permission.TRANSFERS_CREATE,

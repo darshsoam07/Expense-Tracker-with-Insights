@@ -105,7 +105,50 @@ def expire_locked(
             command="expire",
         )
 
-    return len(due)
+    approvals = db.execute(
+        text("""SELECT id,hold_id,amount,maker,payload_hash
+        FROM ledgerops.approval_requests WHERE source_id=:account AND status='pending_approval'
+        AND expires_at<=:now ORDER BY id FOR UPDATE"""),
+        {"account": account, "now": now},
+    ).all()
+    for row in approvals:
+        if not append_event(
+            db,
+            audit,
+            request_id,
+            hold=row.hold_id,
+            account=account,
+            kind="released",
+            amount=row.amount,
+            remaining=Decimal(0),
+            now=now,
+            actor=row.maker,
+            command="release",
+            key=f"approval/{row.id}",
+            digest=row.payload_hash,
+            reason="Approval expired",
+        ):
+            raise AppError(409, "release_conflict", "Reservation release conflicted.")
+        values = {"id": row.id, "event": uuid4(), "now": now, "request": request_id}
+        db.execute(
+            text("""UPDATE ledgerops.approval_requests SET status='expired',
+            completed_at=:now WHERE id=:id"""),
+            values,
+        )
+        db.execute(
+            text("""INSERT INTO ledgerops.approval_events
+            VALUES(:event,:id,'expired',NULL,:now,:request)"""),
+            values,
+        )
+        audit.record(
+            db,
+            principal=Principal.system("approval-expiry"),
+            action="approval.expired",
+            target_type="approval_request",
+            target_id=str(row.id),
+            request_id=request_id,
+        )
+    return len(due) + len(approvals)
 
 
 def refresh(
@@ -181,6 +224,15 @@ def receipt(db: Session, actor: UUID, command: str, key: str, digest: str) -> di
     if result.pop("digest") != digest:
         raise AppError(409, "idempotency_conflict", "This key belongs to a different command.")
     return result
+
+
+def require_unassigned(db: Session, hold: UUID) -> None:
+    if db.scalar(
+        text("""SELECT EXISTS(SELECT FROM ledgerops.approval_requests
+        WHERE hold_id=:hold AND status='pending_approval')"""),
+        {"hold": hold},
+    ):
+        raise AppError(409, "hold_reserved", "Reservation belongs to a pending approval.")
 
 
 def may_release(role: str, actor: UUID, creator: UUID) -> bool:
@@ -292,6 +344,7 @@ def _change_locked(
         kind = "created"
         remaining = amount
     else:
+        require_unassigned(db, previous["id"])
         available = Decimal(previous["remaining"])
         amount = available if amount is None else amount
         if available <= 0 or amount <= 0 or amount > available:

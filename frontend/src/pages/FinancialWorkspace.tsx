@@ -84,9 +84,13 @@ export function FinancialWorkspace({ section }: { section: string }) {
     setBusy(true);
     try {
       const transfer = await api.createTransfer(command, attempt.current.key);
-      toast.success("Internal transfer posted", {
-        description: transfer.journal_reference,
-      });
+      if (transfer.status === "pending_approval") {
+        toast.info("Funds reserved. Transfer awaits independent approval.");
+      } else if (transfer.status === "posted") {
+        toast.success("Internal transfer posted", { description: transfer.journal_reference });
+      } else {
+        toast.info(`Transfer status: ${transfer.status}`);
+      }
       attempt.current = null;
       setOpen(false);
       setCommand((previous) => ({ ...previous, amount: "", description: "" }));
