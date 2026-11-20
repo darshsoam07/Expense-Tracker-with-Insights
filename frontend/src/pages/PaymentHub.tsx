@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { api, type Account, type Payment, type PaymentCommand } from "../api";
+import { api, ApiError, type Account, type Payment, type PaymentCommand } from "../api";
 import { useAuth } from "../context/AuthContext";
+
+import { clearAttempt, readAttempt, saveAttempt, validBody, type Attempt } from "./paymentRecovery";
 
 const empty: PaymentCommand = {
   source_id: "", beneficiary_name: "", destination_reference: "",
@@ -9,6 +11,11 @@ const empty: PaymentCommand = {
 };
 
 export function PaymentHub() {
+  const { user, status } = useAuth();
+  return status === "authenticated" && user ? <MakerHub key={user.id} maker={user.id} /> : null;
+}
+
+function MakerHub({ maker }: { maker: string }) {
   const { user } = useAuth();
   const [payments, setPayments] = useState<Payment[]>();
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -18,7 +25,10 @@ export function PaymentHub() {
   const [revision, refresh] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const key = useRef(crypto.randomUUID());
+  const [attempt, setAttempt] = useState<Attempt | null | "blocked">(() => {
+    try { return readAttempt(maker); } catch { return "blocked"; }
+  });
+  const sending = useRef(false);
   const canCreate = user?.permissions.includes("payments.create");
   const activeAccounts = useMemo(() => accounts.filter(a => a.status === "active"), [accounts]);
 
@@ -41,14 +51,45 @@ export function PaymentHub() {
     finally { setBusy(false); }
   }
   async function create() {
+    if (sending.current || attempt === "blocked") return;
+    sending.current = true;
     setBusy(true); setError("");
+    let saved: Attempt | undefined;
     try {
-      const payment = await api.createPayment(command, key.current);
-      select(payment); setCommand({...empty, source_id: command.source_id});
-      key.current = crypto.randomUUID(); refresh(value => value + 1);
+      const existing = readAttempt(maker);
+      if (existing && existing.key !== attempt?.key) { setAttempt(existing); return; }
+      if (!attempt && !validBody(command)) return;
+      const record: Attempt = existing || attempt || {
+        maker, version: 1, created: Date.now(), state: "submitting",
+        key: crypto.randomUUID(), body: { ...command }
+      };
+      saveAttempt(record);
+      saved = record;
+      setAttempt(record);
+      const payment = await api.createPayment(record.body, record.key);
+      if (!payment?.id || payment.actor_id !== maker || !payment.status) throw Error("Missing payment acknowledgement");
+      clearAttempt(record);
+      setAttempt(null);
+      select(payment); setCommand({...empty, source_id: record.body.source_id});
+      refresh(value => value + 1);
       toast.success("Payment instruction reserved");
-    } catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); }
+    } catch (e) {
+      if (!saved) {
+        setError("Safe retry protection could not be initialized. Check browser storage and try again.");
+      } else if (!attempt && e instanceof ApiError &&
+          ["insufficient_funds", "account_unavailable", "account_not_found", "invalid_amount", "validation_error"].includes(e.code) &&
+          [404, 409, 422].includes(e.status)) {
+        clearAttempt(saved); setAttempt(null); setError(e.message);
+      } else {
+        const unknown: Attempt = {...saved, state: "outcome_unknown"};
+        try {
+          if (readAttempt(maker)?.key === saved.key) saveAttempt(unknown);
+        } catch { /* The verified original record remains sufficient for retry. */ }
+        setAttempt(unknown);
+        setError(e instanceof ApiError && e.code === "idempotency_conflict"
+          ? "The original submission could not be safely replayed." : (e as Error).message);
+      }
+    } finally { sending.current = false; setBusy(false); }
   }
   async function act(action: "submit" | "cancel") {
     if (!selected) return;
@@ -66,7 +107,13 @@ export function PaymentHub() {
       <h1>Payment Hub</h1><p>Create reserved INR instructions and track simulated rail outcomes.</p>
     </div><span className="status-badge warning">SIMULATED RAIL</span></header>
     {error && <p role="alert" className="error-message">{error}</p>}
-    {canCreate && <section className="panel"><h2>New payment instruction</h2>
+    {attempt === "blocked" && <p role="alert">Safe retry protection is unavailable. Restore browser storage before submitting.</p>}
+    {attempt && attempt !== "blocked" && <section className="panel"><h2>Unresolved payment submission</h2>
+      <p>The payment submission may already have completed. Retry the original request to safely recover its result.</p>
+      <p>{attempt.body.customer_reference} · INR {attempt.body.amount}</p>
+      {canCreate && <button className="button primary" disabled={busy} onClick={() => void create()}>Retry original submission</button>}
+    </section>}
+    {canCreate && !attempt && <section className="panel"><h2>New payment instruction</h2>
       <div className="form-grid">
         <label>Source account<select value={command.source_id}
           onChange={e => setCommand({...command,source_id:e.target.value})}>
@@ -80,9 +127,7 @@ export function PaymentHub() {
           onChange={e => setCommand({...command,customer_reference:e.target.value})}/></label>
         <label>Amount in INR<input inputMode="decimal" value={command.amount}
           onChange={e => setCommand({...command,amount:e.target.value})}/></label>
-      </div><button className="button primary" disabled={busy || !command.source_id ||
-        !command.beneficiary_name.trim() || !command.destination_reference.trim() ||
-        !command.customer_reference.trim() || !/^(0|[1-9]\d{0,15})(\.\d{1,2})?$/.test(command.amount)}
+      </div><button className="button primary" disabled={busy || !validBody(command)}
         onClick={() => void create()}>Create and reserve</button></section>}
     <section className="panel"><h2>Payment instructions</h2>
       {!payments && !error && <p role="status">Loading payment instructions…</p>}
