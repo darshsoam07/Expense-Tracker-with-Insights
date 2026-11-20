@@ -1,6 +1,6 @@
 # LedgerOps 2.0 â€” Product, Experience, and Engineering Blueprint
 
-**Delivery update, 20 November 2026.** PR 6a merged in GitHub PR #7. PR 7a implements account holds in local review. PR 7b will consume this subsystem. The earlier baseline below is historical. See [ADR 0011](../architecture/adr/0011-account-holds.md).
+**Delivery update, 20 November 2026.** PR 6a and PR 7a merged in GitHub PRs #7 and #8. The local PR 7b branch uses account holds for independent review of internal transfers. The earlier baseline below is historical. See [ADR 0012](../architecture/adr/0012-transfer-approvals.md).
 
 **Status:** Approved product direction for implementation planning  
 **Product:** LedgerOps  

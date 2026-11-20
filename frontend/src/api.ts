@@ -125,6 +125,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  approvals: (offset: number) => request<Approval[]>(`/api/v1/approvals?offset=${offset}`),
+  approval: (id: string) => request<Approval>(`/api/v1/approvals/${id}`),
+  decide: (id: string, choice: "approve"|"reject", reason: string) =>
+    request<Approval>(`/api/v1/approvals/${id}/${choice}`, {method:"POST",body:JSON.stringify({reason})}),
   getCsrf: fetchCsrfToken,
 
   async getMe(): Promise<AuthStateResponse> {
@@ -196,6 +200,11 @@ export const api = {
 };
 
 export type Money = string;
+export interface Approval {
+  id:string; maker:string; maker_name:string; source_id:string; destination_id:string;
+  amount:string; currency:string; status:string; required_count:number; hold_status:string;
+  decisions?: {actor:string;decision:string;reason:string;decided_at:string}[];
+}
 export interface Account {
   membership_role: "owner" | "administrator" | "member" | "viewer";
   id: string;

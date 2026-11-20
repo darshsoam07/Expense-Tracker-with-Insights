@@ -54,7 +54,9 @@ def create_transfer(
         request_id_of(request),
         body.hold_id,
     )
-    response.status_code = 201 if created else 200
+    response.status_code = (
+        202 if result["status"] == "pending_approval" else 201 if created else 200
+    )
     return result
 
 

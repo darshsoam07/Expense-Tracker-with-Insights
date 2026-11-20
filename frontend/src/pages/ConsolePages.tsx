@@ -38,6 +38,7 @@ import {
 import { destinations } from "../components/AppShell";
 import { useAuth } from "../context/AuthContext";
 import { FinancialWorkspace } from "./FinancialWorkspace";
+import { ApprovalQueue } from "./ApprovalQueue";
 
 
 interface Props {
@@ -305,7 +306,7 @@ export function ConsolePages({
                 </span>
                 <div>
                   <strong>Pending approvals</strong>
-                  <small>Awaiting workflow integration</small>
+                  <small>Review reserved transfers</small>
                 </div>
                 <ChevronRight size={15} />
               </Link>
@@ -327,6 +328,7 @@ export function ConsolePages({
         </div>
       </>
     );
+  else if (section === "approvals") content = <ApprovalQueue />;
   else if (["accounts","transfers","ledger"].includes(section))
     content = <FinancialWorkspace key={section} section={section} />;
   else if (section === "health" || section === "infrastructure")

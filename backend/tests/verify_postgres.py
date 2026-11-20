@@ -64,6 +64,17 @@ IDENTITY_TABLES = {
 alembic("upgrade", "head")
 assert database_ready(runtime)
 assert tables() >= IDENTITY_TABLES | {"account_holds", "hold_events"}
+assert {
+    "approval_policies",
+    "approval_requests",
+    "approval_decisions",
+    "approval_events",
+} <= tables()
+alembic("downgrade", "-1")
+assert revision() == ["0005_transfer_approvals"]
+alembic("downgrade", "-1")
+assert revision() == ["0004_account_holds"]
+assert "approval_requests" not in tables()
 alembic("downgrade", "-1")
 assert revision() == ["0003_financial_integrity"]
 assert "hold_events" not in tables()

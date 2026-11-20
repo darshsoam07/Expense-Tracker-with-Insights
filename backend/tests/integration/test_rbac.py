@@ -92,6 +92,7 @@ def test_state_changing_route_needs_csrf_before_permission(
 def test_effective_permissions_are_the_union_of_roles(db: Session, make_user: UserFactory) -> None:
     user = make_user(("viewer", "auditor"))
     assert effective_permissions(db, user.id) == {
+        "approvals.read",
         "platform.read",
         "audit.read",
         "accounts.read",
@@ -99,6 +100,8 @@ def test_effective_permissions_are_the_union_of_roles(db: Session, make_user: Us
         "holds.read",
     }
     assert effective_permissions(db, make_user(("admin",)).id) == {
+        "approvals.read",
+        "approvals.decide",
         "users.read",
         "users.manage",
         "accounts.read",

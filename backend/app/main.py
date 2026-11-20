@@ -16,6 +16,7 @@ from fastapi import Depends, FastAPI
 from app import __version__
 from app.api import API_V1_PREFIX
 from app.api.accounts import router as accounts_router
+from app.api.approvals import router as approvals_router
 from app.api.auth import me_router
 from app.api.auth import router as auth_router
 from app.api.deps import enforce_csrf
@@ -89,5 +90,6 @@ def create_app(settings: Settings | None = None, *, clock: Clock | None = None) 
     app.include_router(me_router)
     app.include_router(holds_router)
     app.include_router(accounts_router)
+    app.include_router(approvals_router)
     app.include_router(transfers_router)
     return app
