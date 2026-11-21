@@ -31,3 +31,13 @@ POST to the instruction's `/submit` endpoint for initial submission or retry, or
 | Admin, operator | Read, create, submit, cancel. Mutation requires a writable membership. |
 | Auditor, approver | Read. Independent approval uses the existing decision permission. |
 | Viewer | None. |
+
+## PR 7d accounting amendment — platform INR nostro
+
+The platform owns one simulated INR asset named PLATFORM-INR-NOSTRO. Chart code 1010 is debit-normal. Its deterministic ledger UUID and unique chart index identify it across workspaces. It has no customer account row. The provision command creates its zero projection explicitly. Synthetic workspace provisioning uses the same account for all future opening journals.
+
+Run `python -m app.modules.finance.nostro` under the migration identity to provision the empty asset. Inspect legacy balances and opening journals before running the explicit `--consolidate` option. It locks the nostro and funded legacy cash projections, identifies the originating customer from posted synthetic opening journals, debits 1010 and credits the legacy 1000 asset. An ambiguous owner aborts the transaction. Zero balances need no journal. Each legacy ledger has a deterministic reclassification journal ID. Existing accounts and posted history remain available.
+
+Outbound settlement debits customer deposit liabilities (2000) and credits 1010. The service locks the shared asset projection, verifies liquidity and the full payment reservation, then records a hold capture, balanced journal, customer-attributed settlement item and audit in the caller's transaction. Rail acceptance alone retains the hold. Inbound items require exception review and have no automatic accounting entry in this milestone.
+
+PR 7d batch processing uses the settlement item journal as its posting receipt. Subsequent statement reconciliation stores comparison evidence separately. Batch retries and reconciliation rules are documented in [ADR 0014](0014-settlement-operations.md).

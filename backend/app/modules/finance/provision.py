@@ -11,6 +11,7 @@ from app.core.clock import SystemClock
 from app.core.principal import Principal
 from app.db import make_engine, migration_url
 from app.modules.audit import AuditWriter
+from app.modules.finance.nostro import provision_nostro
 from app.modules.finance.posting import Line, post
 
 
@@ -44,8 +45,9 @@ def provision(db: Session, user: UUID) -> None:
             target_id=str(customer),
             metadata={"member": str(user)},
         )
-    ledgers = []
-    for code in ("1000", "2000", "2000"):
+    ledgers = [provision_nostro(db, audit)]
+    for _ in range(2):
+        code = "2000"
         ledger = uuid4()
         ledgers.append(ledger)
         db.execute(
@@ -58,26 +60,26 @@ def provision(db: Session, user: UUID) -> None:
             text("INSERT INTO ledgerops.account_balances(ledger_id,currency) VALUES (:id,'INR')"),
             {"id": ledger},
         )
-        if code == "2000":
-            account = uuid4()
-            db.execute(
-                text("""
-                INSERT INTO ledgerops.accounts(id,customer_id,ledger_id,currency)
-                VALUES (:id,:customer,:ledger,'INR')
-            """),
-                {"id": account, "customer": customer, "ledger": ledger},
-            )
-            audit.record(
-                db,
-                principal=actor,
-                action="account.opened",
-                target_type="account",
-                target_id=str(account),
-            )
+
+        account = uuid4()
+        db.execute(
+            text("""
+            INSERT INTO ledgerops.accounts(id,customer_id,ledger_id,currency)
+            VALUES (:id,:customer,:ledger,'INR')
+        """),
+            {"id": account, "customer": customer, "ledger": ledger},
+        )
+        audit.record(
+            db,
+            principal=actor,
+            action="account.opened",
+            target_type="account",
+            target_id=str(account),
+        )
     initial = Decimal("1000.00")
     post(
         db,
-        uuid4(),
+        uuid5(customer, "opening-funding"),
         "Synthetic opening funding",
         (Line(ledgers[0], initial, Decimal(0)), Line(ledgers[1], Decimal(0), initial)),
         actor,

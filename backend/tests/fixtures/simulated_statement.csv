@@ -1,0 +1,2 @@
+provider_reference,external_reference,amount,currency,transaction_date,settlement_date,direction,status
+SIM001,EXT001,10.00,INR,2026-01-01,2026-01-01,outbound,settled

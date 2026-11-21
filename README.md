@@ -123,3 +123,7 @@ See [ADR-0009 amendments](docs/architecture/adr/0009-ledgerops-2-amendments.md),
 See the [financial core decision and provisioning guide](docs/architecture/adr/0010-internal-financial-core.md) for account access, journal posting, and transfer retries.
 
 Account detail shows ledger, held and available INR balances. See the [hold lifecycle, API and verification guide](docs/architecture/adr/0011-account-holds.md).
+
+### PR 7d settlement operations
+
+The Settlements workspace creates customer-scoped batches of up to 100 accepted INR payments with intact reservations. Processing posts each item through the existing platform nostro settlement service. Operators can retry incomplete batches and inspect their journals, holds and failure codes. The Reconciliation workspace compares imported simulated rail statements against those postings. See [settlement operations and CSV contract](docs/architecture/adr/0014-settlement-operations.md).

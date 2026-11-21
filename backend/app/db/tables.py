@@ -8,6 +8,7 @@ the two cannot silently drift apart.
 from sqlalchemy import (
     Boolean,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -354,4 +355,84 @@ payment_events = Table(
     Column("provider_reference", Text),
     Column("detail", Text),
     Column("correlation_id", Text),
+)
+
+settlement_items = Table(
+    "settlement_items",
+    metadata,
+    Column("batch_id", Uuid),
+    Column("payment_id", Uuid, primary_key=True),
+    Column("customer_id", Uuid, nullable=False),
+    Column("journal_id", Uuid, nullable=False),
+    Column("settled_at", DateTime(timezone=True), nullable=False),
+    Column("actor_id", Uuid, nullable=False),
+)
+
+settlement_batches = Table(
+    "settlement_batches",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("customer_id", Uuid, nullable=False),
+    Column("actor_id", Uuid, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("processed_at", DateTime(timezone=True), nullable=True),
+    Column("currency", Text, nullable=False),
+    Column("status", Text, nullable=False),
+)
+
+settlement_candidates = Table(
+    "settlement_candidates",
+    metadata,
+    Column("payment_id", Uuid, primary_key=True),
+    Column("batch_id", Uuid, nullable=False),
+    Column("customer_id", Uuid, nullable=False),
+    Column("failure", Text, nullable=True),
+)
+
+statement_imports = Table(
+    "statement_imports",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("customer_id", Uuid, nullable=False),
+    Column("actor_id", Uuid, nullable=False),
+    Column("filename", Text, nullable=False),
+    Column("checksum", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+statement_lines = Table(
+    "statement_lines",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("import_id", Uuid, nullable=False),
+    Column("external_reference", Text, nullable=False),
+    Column("provider_reference", Text, nullable=False),
+    Column("amount", Numeric(18, 2), nullable=False),
+    Column("currency", Text, nullable=False),
+    Column("direction", Text, nullable=False),
+    Column("transaction_date", Date, nullable=False),
+    Column("settlement_date", Date, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("duplicate", Boolean, nullable=False),
+)
+
+reconciliation_runs = Table(
+    "reconciliation_runs",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("import_id", Uuid, nullable=False),
+    Column("actor_id", Uuid, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("completed_at", DateTime(timezone=True), nullable=True),
+)
+
+reconciliation_results = Table(
+    "reconciliation_results",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("run_id", Uuid, nullable=False),
+    Column("line_id", Uuid, nullable=True),
+    Column("payment_id", Uuid, nullable=True),
+    Column("classification", Text, nullable=False),
+    Column("evidence", JSONB, nullable=False),
 )
