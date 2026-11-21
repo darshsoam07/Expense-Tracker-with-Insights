@@ -355,3 +355,13 @@ payment_events = Table(
     Column("detail", Text),
     Column("correlation_id", Text),
 )
+
+settlement_items = Table(
+    "settlement_items",
+    metadata,
+    Column("payment_id", Uuid, primary_key=True),
+    Column("customer_id", Uuid, nullable=False),
+    Column("journal_id", Uuid, nullable=False),
+    Column("settled_at", DateTime(timezone=True), nullable=False),
+    Column("actor_id", Uuid, nullable=False),
+)
