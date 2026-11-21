@@ -71,6 +71,9 @@ assert {
     "approval_events",
 } <= tables()
 assert {"payment_instructions", "payment_events"} <= tables()
+assert "reconciliation_results" in tables()
+alembic("downgrade", "-1")
+assert revision() == ["0008_platform_nostro"]
 assert "settlement_items" in tables()
 alembic("downgrade", "-1")
 assert revision() == ["0007_payment_instructions"]

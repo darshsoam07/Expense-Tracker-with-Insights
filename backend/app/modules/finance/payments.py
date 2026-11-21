@@ -72,6 +72,10 @@ def _scoped(db: Session, actor: UUID, payment: UUID, lock: bool = False) -> Any:
 
 def detail(db: Session, actor: UUID, payment: UUID) -> dict[str, Any]:
     row = dict(_scoped(db, actor, payment))
+    row["settlement_journal_id"] = db.scalar(
+        text("SELECT journal_id FROM ledgerops.settlement_items WHERE payment_id=:id"),
+        {"id": payment},
+    )
     row["events"] = [
         dict(e)
         for e in db.execute(
