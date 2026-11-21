@@ -1,129 +1,647 @@
 # LedgerOps
+### Institutional Banking & Financial Operations Platform
 
-A **simulated** cloud-native banking and financial-operations platform, built as a portfolio project for Backend, Cloud, DevOps and SRE engineering.
+LedgerOps is a cloud-native-oriented banking and financial operations platform built to demonstrate financial integrity, payment orchestration, operational controls and reliable backend engineering.
 
-> **Scope and honesty notice.** LedgerOps uses synthetic customers and simulated funds only. It does not connect to real banks or payment rails and makes no claim of regulatory compliance, audit certification, or production-banking readiness.
+It combines a double-entry financial ledger, internal transfers, account reservations, maker-checker approvals, simulated payment rails, settlement processing and reconciliation within a modular monolith architecture.
 
-## Current status
+The platform is designed around one core principle:
 
-| Item | State |
+**Every financial operation must be traceable, authorized, atomic and auditable.**
+
+> **Project status:** Core financial and banking operations are implemented through settlement and reconciliation. The final Exceptions & Investigations milestone (PR 7e) is currently in development.
+
+---
+
+## 1. Overview
+
+Traditional financial dashboards often focus on displaying balances and transaction histories. LedgerOps goes further by implementing the backend controls and operational workflows that make financial operations reliable.
+
+The platform demonstrates:
+
+- Customer and account ownership.
+- Double-entry bookkeeping.
+- Immutable financial journals.
+- Transactional account balance projections.
+- Concurrency-safe internal transfers.
+- Persistent idempotency.
+- Account holds and available-balance enforcement.
+- Maker-checker approval workflows.
+- Simulated external payment instructions.
+- Settlement batches and reconciliation.
+- Operational exception management.
+
+LedgerOps uses simulated financial infrastructure. It does not connect to real banks, process actual payments or claim regulatory certification.
+
+## 2. Key capabilities
+
+### Customer and account management
+
+- Multi-customer membership model.
+- Multiple users per customer.
+- Customer-scoped account access.
+- Customer-facing deposit accounts.
+- Separate ledger accounts.
+- Account status and currency management.
+- Authorized account provisioning.
+
+### Financial integrity and ledger
+
+- Double-entry journal accounting.
+- Balanced debit and credit postings.
+- Immutable posted journals.
+- PostgreSQL-enforced financial constraints.
+- Atomic ledger posting.
+- Transactional balance projections.
+- Ledger and available-balance separation.
+- INR monetary processing using decimal precision.
+
+### Internal transfers
+
+- Account-to-account internal transfers.
+- Persistent idempotency keys.
+- Request fingerprint validation.
+- PostgreSQL row-level locking.
+- Concurrent overdraft prevention.
+- Transactional journal posting and audit records.
+- Safe retry of ambiguous requests.
+
+### Account holds
+
+- Funds reservation.
+- Available-balance enforcement.
+- Partial and full release.
+- Hold expiration.
+- Hold capture through financial posting.
+- Concurrency-safe reservation handling.
+- Transactional lifecycle history.
+
+### Maker-checker approvals
+
+- Versioned approval policies.
+- Approval request lifecycle.
+- Independent reviewer decisions.
+- Self-approval prevention.
+- Separation of duties.
+- Hold-backed pending transfers.
+- Atomic final approval and posting.
+- Rejection and expiry handling.
+
+### Payment orchestration
+
+- External payment instructions.
+- Simulated payment rail adapter.
+- Payment lifecycle tracking.
+- Approval integration.
+- Persistent idempotency.
+- Retry handling.
+- Ambiguous outcome protection.
+- Reservation retention until settlement.
+
+Supported simulated outcomes include:
+
+- Accepted.
+- Confirmed rejection.
+- Temporary unavailability.
+- Ambiguous timeout.
+- Cancellation where permitted.
+
+Accepted payments are not represented as settled payments.
+
+### Settlement and reconciliation
+
+- Platform-wide INR nostro account.
+- Settlement batches.
+- Individual settlement item tracking.
+- Atomic outbound settlement posting.
+- Shared nostro liquidity protection.
+- CSV statement import.
+- Duplicate statement detection.
+- Reconciliation runs.
+- Exact matching and discrepancy classification.
+- Auditable settlement history.
+
+### Exceptions and investigations
+
+*Implementation in progress.*
+
+The planned operational workspace includes:
+
+- Payment and settlement exceptions.
+- Reconciliation discrepancies.
+- Expired approval and stale-hold exceptions.
+- Customer-scoped investigation queues.
+- Assignment and reassignment.
+- Investigation notes.
+- Resolution and closure.
+- Append-only operational event history.
+
+## 3. Technology stack
+
+| Layer | Technology |
 |---|---|
-| Phase | PR 7b merged in #9. PR 7c adds reserved payment instructions and a deterministic simulated INR rail. See [ADR 0013](docs/architecture/adr/0013-simulated-payment-rails.md). |
-| PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
-| PR 3H | ✅ Merged — ADR-0009 amendments, implementation roadmap, README update, repo hygiene |
-| PR 5 | ✅ Merged (GitHub PR #2) — Institutional Luxury website and operations console, frontend CI job |
-| PR 4a | ✅ Merged (GitHub PR #5) — Identity, RBAC, sessions, CSRF, and append-only audit trail |
-| PR 4b | Merged — Frontend auth integration, login/logout UI, same-origin Vite proxy, CORS removal, Windows CI job |
-| PR 6a | Merged in GitHub PR #7 |
-| Application | Cookie-authenticated console with scoped INR accounts, internal transfers, approvals and reserved simulated payment instructions |
-| Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
-| Cloud resources | **None.** Nothing is deployed anywhere |
+| Frontend | React, TypeScript |
+| Development server | Vite |
+| Backend | Python, FastAPI |
+| ORM | SQLAlchemy 2.x |
+| Database | PostgreSQL 17 |
+| Migrations | Alembic |
+| Data validation | Pydantic |
+| Authentication | Cookie-based sessions |
+| Password security | Argon2id |
+| Authorization | Role-based access control |
+| Financial precision | Python Decimal, PostgreSQL NUMERIC |
+| Testing | Pytest, Vitest |
+| Static analysis | Ruff, mypy, import-linter |
+| Containerization | Docker, Docker Compose |
+| CI/CD | GitHub Actions |
 
-LedgerOps evolves an earlier Flask expense-tracker project. The old app is kept intact while the replacement is built beside it (a "strangler" migration, see [ADR-0006](docs/architecture/adr/0006-strangler-migration.md)).
+## 4. Architecture
 
-## Repository layout
+LedgerOps follows a modular monolith architecture.
 
+The frontend communicates with the FastAPI backend through a same-origin Vite reverse proxy. PostgreSQL remains the authoritative source of financial data.
+
+```mermaid
+flowchart TD
+    U[Operator / Approver / Auditor]
+    FE[React + TypeScript Console]
+    VP[Vite Same-Origin Proxy]
+    API[FastAPI Application]
+    AUTH[Authentication and RBAC]
+    FIN[Financial Domain]
+    PAY[Payment Operations]
+    OPS[Settlement and Exceptions]
+    DB[(PostgreSQL 17)]
+
+    U --> FE
+    FE --> VP
+    VP --> API
+    API --> AUTH
+    API --> FIN
+    API --> PAY
+    API --> OPS
+    AUTH --> DB
+    FIN --> DB
+    PAY --> DB
+    OPS --> DB
 ```
-legacy/expense-tracker/   Original Flask + SQLite app, byte-identical to tag legacy-v1
-backend/                  New FastAPI backend (see backend/README.md)
-.github/workflows/        CI: lint, types, architecture rules, tests
-docs/architecture/        Phase 0 audit, Phase 1 plan, architecture decision records
-docs/legacy-migration.md  How the relocation was done and verified
-scripts/                  Cross-platform (Python) verification scripts
+
+### Backend module boundaries
+
+The backend separates major business responsibilities:
+
+- Authentication and authorization.
+- Customer and account management.
+- Financial ledger and posting.
+- Internal transfers.
+- Account holds.
+- Approval workflows.
+- Payment instructions.
+- Settlement and reconciliation.
+- Operational exceptions.
+
+Business logic belongs in domain services rather than directly inside API routers.
+
+### Architectural principles
+
+1. PostgreSQL is the financial source of truth.
+2. Financial operations execute within explicit database transactions.
+3. Posted journals cannot be modified or deleted through normal application operations.
+4. All monetary calculations use Decimal rather than floating-point arithmetic.
+5. Concurrency-sensitive operations use PostgreSQL row-level locking.
+6. Idempotency is stored persistently in PostgreSQL.
+7. Audit records are written within the associated business transaction.
+8. Platform permissions and customer membership are both enforced.
+9. External payment processing is explicitly simulated.
+
+## 5. Financial accounting model
+
+### Double-entry accounting
+
+Every posted financial journal must balance:
+
+\[
+\text{Total Debits} = \text{Total Credits}
+\]
+
+A customer deposit is represented as a liability of the platform.
+
+For an internal transfer of INR 1,000:
+
+| Posting | Debit | Credit |
+|---|---:|---:|
+| Source customer deposit liability | ₹1,000 | — |
+| Destination customer deposit liability | — | ₹1,000 |
+| **Total** | **₹1,000** | **₹1,000** |
+
+### Account balances
+
+The platform distinguishes:
+
+- Ledger balance: the posted financial balance.
+- Held amount: funds reserved for pending operations.
+- Available balance: funds available for new operations.
+
+The initial balance rule is:
+
+\[
+\text{Available Balance} =
+\text{Ledger Balance} - \text{Active Holds}
+\]
+
+### Platform-wide nostro
+
+LedgerOps uses a dedicated platform-owned INR nostro ledger account for simulated external payment settlement.
+
+Outbound settlement follows:
+
+| Posting | Debit | Credit |
+|---|---:|---:|
+| Customer deposit liability | ₹1,000 | — |
+| Platform INR nostro asset | — | ₹1,000 |
+
+The nostro is not a customer-owned account and is not exposed through ordinary customer account APIs.
+
+### Money representation
+
+Financial values use:
+
+- Python `Decimal` in backend calculations.
+- PostgreSQL `NUMERIC(18,2)` for INR amounts.
+- Decimal strings in API requests and responses.
+- Explicit currency fields.
+
+JavaScript floating-point arithmetic is not used for financial calculations.
+
+Initial processing supports INR only. Cross-currency FX execution is not implemented.
+
+## 6. Payment lifecycle
+
+Payment instructions are distinct from internal transfers.
+
+The simulated payment lifecycle distinguishes payment acceptance from settlement.
+
+```mermaid
+stateDiagram-v2
+    [*] --> PendingApproval
+    PendingApproval --> ReadyForSubmission: Approved
+    PendingApproval --> Failed: Rejected
+    ReadyForSubmission --> Submitted
+    Submitted --> Accepted
+    Submitted --> Failed: Confirmed rejection
+    Submitted --> OutcomeUnknown: Timeout
+    OutcomeUnknown --> Accepted: Resolved
+    OutcomeUnknown --> Failed: Resolved
+    ReadyForSubmission --> Cancelled
+    Accepted --> Settled: Future settlement workflow
 ```
 
-## Documentation
+Important financial behavior:
 
-- [Phase 0 audit](docs/architecture/phase0-audit.md): findings on the original app, including security issues
-- [Phase 1 plan](docs/architecture/phase1-plan.md): approved plan for the foundation
-- [Architecture decision records](docs/architecture/adr/): why each major decision was made
-- [Legacy migration record](docs/legacy-migration.md): relocation, verification, Docker instructions
+- Payment creation reserves funds.
+- Approval is required when an applicable policy matches.
+- Accepted payments retain their holds.
+- Ambiguous timeouts retain their holds.
+- Confirmed terminal failures release their holds.
+- Settlement is responsible for the final financial posting.
 
-## Running both services with Docker Compose
+A simulated rail acceptance is not proof of real-world settlement.
 
-Run `python scripts/init_compose.py` to create local Compose credentials in the root `.env`. Existing files are preserved. From the repository root run `docker compose up --build`, then open <http://localhost:5173>. The browser interacts with the frontend on <http://localhost:5173>, which proxies `/api` and `/health` requests to the FastAPI backend with same-origin cookies and in-memory CSRF tokens. Direct CORS configuration has been removed. Source files are bind-mounted for Vite hot reload. Run `docker compose down` to stop the services.
+## 7. Security and access control
 
-## Running the new backend
+LedgerOps implements:
 
-To run the ledger preview from the repository root:
+- Argon2id password hashing.
+- Opaque cookie-based sessions.
+- Hashed session-token storage.
+- CSRF protection.
+- Same-origin frontend/backend communication.
+- Explicit permission-based authorization.
+- Customer membership enforcement.
+- Append-only audit records.
+- Account-level ownership checks.
 
-```sh
-npm ci --prefix frontend
-npm run dev --prefix frontend
-```
+### Platform roles
 
-Open the local URL printed by Vite. The preview runs independently. The API indicator polls FastAPI readiness every 15 seconds through the Vite proxy. Run the backend on port 8000 to see its status. Click the indicator to refresh immediately.
+The platform uses explicit roles:
 
-See [`backend/README.md`](backend/README.md) for setup, run and test commands (PowerShell and Git Bash).
+| Role | Intended responsibility |
+|---|---|
+| Admin | Authorized platform administration |
+| Operator | Financial operations and authorized transfers |
+| Approver | Independent approval decisions |
+| Auditor | Read-only operational and audit access |
+| Viewer | Restricted read-only access |
 
-## Running the legacy app locally
+A platform role does not automatically grant unrestricted customer access. Customer membership and resource-level authorization remain mandatory.
 
-> The legacy app has known security issues (see the audit): debug mode, a default secret, no CSRF protection. **Run it on your own machine only. Never deploy it.**
+### Auditability
 
-Requires Python 3.10 or newer. These commands were written for Windows but **have not been tested on Windows**; the Linux equivalent was.
+Important financial and operational actions are recorded with identifiable actors and timestamps.
 
-**PowerShell**
+Audit records provide an operational history but should not be described as absolutely immutable against privileged database administrators.
+
+## 8. Getting started
+
+### Prerequisites
+
+- Git.
+- Docker Desktop.
+- Docker Compose.
+- Windows PowerShell or a compatible terminal.
+
+Docker Compose manages the development services.
+
+### Clone the repository
 
 ```powershell
-cd legacy\expense-tracker
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1        # if blocked: Set-ExecutionPolicy -Scope Process Bypass
-pip install -r requirements.txt
-$env:FLASK_SECRET_KEY = py -c "import secrets; print(secrets.token_hex(32))"
-py app.py
+git clone https://github.com/darshsoam07/Expense-Tracker-with-Insights.git
+
+cd Expense-Tracker-with-Insights
 ```
 
-**Git Bash**
+### Configure the environment
 
-```bash
-cd legacy/expense-tracker
-python -m venv .venv
-source .venv/Scripts/activate
-pip install -r requirements.txt
-export FLASK_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-python app.py
+Review the repository's environment template, backend configuration and `docker-compose.yml`.
+
+Provide the required local configuration without committing secrets or `.env` files.
+
+### Start the application
+
+```powershell
+docker compose config --quiet
+
+docker compose up --build -d --wait --wait-timeout 180
+
+docker compose ps
 ```
 
-Then open <http://localhost:4949>. Windows may show a firewall prompt because the legacy app listens on all interfaces; choose "Cancel" or allow private networks only.
+The application uses the frontend reverse proxy for API requests.
 
-## Verifying the repository
+### Access LedgerOps
 
-From the repository root, in PowerShell or Git Bash (no Bash-only scripts are used):
+| Service | Address |
+|---|---|
+| Web application | http://localhost:5173 |
+| Backend health | http://localhost:8000/health/live |
+| Backend readiness | http://localhost:8000/health/ready |
+| Proxied readiness | http://localhost:5173/health/ready |
 
+The frontend uses relative `/api/v1/...` requests. Browser clients should not need a separate backend origin.
+
+### Stop the application
+
+```powershell
+docker compose down
 ```
-py scripts/verify_relocation.py     # Git history and file-content checks
-py scripts/verify_legacy.py         # starts the legacy app in a temp folder and smoke-tests it
+
+This stops and removes containers without deleting named database volumes.
+
+**Warning:** Avoid `docker compose down -v` unless you explicitly intend to delete the database and other named volume data.
+
+## 9. Synthetic workspace provisioning
+
+LedgerOps provides an explicit synthetic workspace provisioning workflow.
+
+Provisioning creates a synthetic organization, customer accounts and opening funding using the supported financial posting services.
+
+The operation uses the migration identity and is explicitly invoked; application startup does not automatically create financial customers or fund accounts.
+
+Start the stack:
+
+```powershell
+docker compose up --build -d --wait
 ```
 
-(On Git Bash, `python` may be used instead of `py`.)
+Use an existing authorized local administrator or operator UUID:
 
-## Roadmap
+```powershell
+docker compose run --rm --no-deps migrate python -m app.modules.finance.provision --user-id <existing-user-uuid>
+```
 
-The active delivery sequence (revised in PR 3H) is:
+The provisioning command is idempotent for the same user.
 
-`PR 3 → PR 3H → PR 5 → PR 4a → PR 4b → PR 6a → PR 6b → PR 7a → PR 8 → …`
+The synthetic opening funding is recorded against the platform-wide INR nostro through a balanced journal and is attributed to the `system:synthetic-provision` principal.
 
-| PR | Scope | Status |
+Use synthetic data only for local development and testing.
+
+## 10. API overview
+
+LedgerOps exposes versioned FastAPI endpoints under `/api/v1`.
+
+Core API areas include:
+
+| Domain | Endpoint examples |
+|---|---|
+| Authentication | `/api/v1/auth/login`, `/api/v1/auth/logout`, `/api/v1/me` |
+| Accounts | `/api/v1/accounts` |
+| Account ledger | `/api/v1/accounts/{account_id}/ledger` |
+| Internal transfers | `/api/v1/transfers` |
+| Approvals | `/api/v1/approvals` |
+| Payments | `/api/v1/payments` |
+| Settlement | `/api/v1/settlements/batches` |
+| Statement import | `/api/v1/settlements/statements/import` |
+| Reconciliation | `/api/v1/settlements/reconciliation-runs` |
+| Exceptions | `/api/v1/exceptions` |
+
+State-changing operations require the appropriate authenticated session, permissions and CSRF protection.
+
+The actual API request and response schemas are maintained in the backend implementation.
+
+## 11. Development and testing
+
+### Backend
+
+From the backend directory, activate the repository's configured Python virtual environment and run:
+
+```powershell
+ruff check .
+ruff format --check .
+mypy
+lint-imports
+pytest
+```
+
+PostgreSQL integration tests require the configured test and migration database URLs.
+
+Use PostgreSQL 17 for tests involving:
+- Row-level locking.
+- Financial posting constraints.
+- Database triggers.
+- Migrations.
+- Concurrency.
+- Transaction rollback.
+- Idempotency.
+
+SQLite is not a replacement for these financial integrity tests.
+
+### Frontend
+
+From the frontend directory:
+
+```powershell
+npm ci
+
+npm run typecheck
+
+npm test
+
+npm run build
+```
+
+### Infrastructure verification
+
+From the repository root:
+
+```powershell
+docker compose config --quiet
+
+docker compose up --build -d --wait --wait-timeout 180
+
+docker compose ps
+```
+
+Verify both health endpoints and inspect service logs for startup failures and accidental secret exposure.
+
+### Continuous integration
+
+The GitHub Actions pipeline includes:
+- Backend lint and type validation.
+- Backend architecture checks.
+- PostgreSQL 17 integration testing.
+- Frontend typecheck.
+- Frontend unit tests.
+- Production build.
+- Windows compatibility checks.
+
+A local test result does not automatically imply that the corresponding hosted GitHub Actions job has passed.
+
+## 12. Repository structure
+
+The main application areas are organized as follows:
+
+```text
+.
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── db/
+│   │   └── modules/
+│   │       ├── auth/
+│   │       └── finance/
+│   ├── migrations/
+│   └── tests/
+│       ├── api/
+│       ├── integration/
+│       └── unit/
+│
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── context/
+│       ├── pages/
+│       └── api.ts
+│
+├── docs/
+│   ├── architecture/
+│   │   └── adr/
+│   └── product/
+│
+├── legacy/
+│   └── expense-tracker/
+│
+├── scripts/
+├── docker-compose.yml
+├── .github/
+│   └── workflows/
+├── AGENTS.md
+└── README.md
+```
+
+The legacy Expense Tracker is preserved separately and is not the financial source of truth for LedgerOps.
+
+## 13. Design system
+
+LedgerOps uses an Institutional Luxury interface direction.
+
+The visual system emphasizes:
+
+- Warm stone and ivory surfaces.
+- Obsidian forest navigation.
+- Restrained emerald primary accents.
+- Champagne secondary accents.
+- Manrope interface typography.
+- IBM Plex Mono for identifiers and financial metadata.
+- Clear information hierarchy.
+- Responsive operational tables and workflows.
+- Accessible keyboard and focus behavior.
+
+The console prioritizes financial information, operational state and traceability over decorative dashboards or fabricated metrics.
+
+## 14. Roadmap and project status
+
+The initial implementation roadmap:
+
+| Milestone | Capability | Status |
 |---|---|---|
-| PR 3 | PostgreSQL foundation, Alembic, Compose, health endpoints | ✅ Merged |
-| PR 3H | ADR-0009 amendments, roadmap, README | ✅ Merged |
-| PR 5 | Institutional Luxury UI & frontend CI | ✅ Merged |
-| PR 4a | Authentication — identity, sessions, CSRF, RBAC, audit | ✅ Merged |
-| PR 4b | Frontend auth integration, Vite proxy, CORS removal, Windows CI | Merged |
-| PR 6a | Accounts, double-entry ledger, internal transfers | Merged |
-| PR 6b | Corporate customer model (`customers` + `customer_members`) | ⏳ Planned |
-| PR 7a | Account holds, expiry, available balance and capture through internal transfer | In local review |
-| PR 8 | External payments, clearing lifecycle, outbox worker | ⏳ Planned |
-| PR 9+ | Multi-currency, statements, observability, cloud deployment | ⏳ Future |
+| PR 3 | PostgreSQL foundation | Completed |
+| PR 3H | Database foundation follow-up | Completed |
+| PR 5 | Institutional Luxury UI shell | Completed |
+| PR 4a | Identity, RBAC, sessions and audit | Completed |
+| PR 4b | Frontend authentication integration | Completed |
+| PR 6a | Financial integrity and double-entry ledger | Completed |
+| PR 7a | Account holds and available-balance enforcement | Completed |
+| PR 7b | Maker-checker approvals | Completed |
+| PR 7c | Simulated payment rails | Completed |
+| PR 7d | Settlement and reconciliation | Completed |
+| PR 7e | Exceptions and investigations | In progress |
 
-Each phase is approved before it starts. No cloud resources are created without explicit approval.
+PR numbers describe the project roadmap and are not necessarily the corresponding GitHub pull request numbers.
 
-See [ADR-0009 amendments](docs/architecture/adr/0009-ledgerops-2-amendments.md), the [implementation roadmap](docs/product/LedgerOps%202.0%20Repository-Grounded%20Assessment%20and%20Implementation%20Roadmap.md), [PR 3 setup and rollback](docs/architecture/pr3-database-foundation.md), and the [approved product blueprint](docs/product/LEDGEROPS_2.0_BLUEPRINT.md).
+The initial application is intended to provide a coherent financial operations experience. Additional cloud deployment and operational engineering work can be undertaken separately.
 
-See the [financial core decision and provisioning guide](docs/architecture/adr/0010-internal-financial-core.md) for account access, journal posting, and transfer retries.
+## 15. Current limitations
 
-Account detail shows ledger, held and available INR balances. See the [hold lifecycle, API and verification guide](docs/architecture/adr/0011-account-holds.md).
+LedgerOps is a simulated financial operations platform.
 
-### PR 7d settlement operations
+The following capabilities are intentionally not implemented:
 
-The Settlements workspace creates customer-scoped batches of up to 100 accepted INR payments with intact reservations. Processing posts each item through the existing platform nostro settlement service. Operators can retry incomplete batches and inspect their journals, holds and failure codes. The Reconciliation workspace compares imported simulated rail statements against those postings. See [settlement operations and CSV contract](docs/architecture/adr/0014-settlement-operations.md).
+- Real bank connectivity.
+- Licensed banking services.
+- Actual external payment execution.
+- FX and cross-currency settlement.
+- Production-grade AML/KYC certification.
+- Automated fraud decisions.
+- Full treasury and liquidity automation.
+- Production deployment guarantees.
+
+Payment rail responses and external settlement behavior are simulated.
+
+Accepted payments are distinct from settled payments.
+
+The initial settlement accounting supports INR only.
+
+Operational exception management is being completed separately from the financial ledger.
+
+## 16. Project goals
+
+LedgerOps is designed to demonstrate engineering capabilities across:
+
+- Financial systems and accounting integrity.
+- Transaction-safe backend development.
+- Database schema design and migrations.
+- Concurrency and idempotency.
+- Authentication and authorization.
+- API design.
+- Operational workflow engineering.
+- Frontend integration.
+- Automated testing and CI.
+- Dockerized application development.
+
+The emphasis is not simply on displaying financial data, but on ensuring that financial operations remain consistent, traceable and correctly authorized.
+
+---
+
+**LedgerOps — Financial operations built around integrity, control and observability.**
