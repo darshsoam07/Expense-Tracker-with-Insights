@@ -124,7 +124,22 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return (await res.json()) as T;
 }
 
+export type SettlementKind = "batches" | "statements" | "reconciliation-runs";
+export interface SettlementRecord {
+  id: string; customer_id: string; status: string; created_at: string; filename?: string;
+  currency?: string; item_count?: number; total?: string; settled_count?: number; failed_count?: number;
+  matched_count?: number; exception_count?: number; row_count?: number; replayed?: boolean;
+}
 export const api = {
+  settlementList: (kind: SettlementKind, offset: number) => request<SettlementRecord[]>(`/api/v1/settlements/${kind}?offset=${offset}`),
+  settlementBatch: (id: string) => request<SettlementRecord>(`/api/v1/settlements/batches/${encodeURIComponent(id)}`),
+  settlementItems: (kind: SettlementKind, id: string, offset: number) =>
+    request<Record<string, unknown>[]>(`/api/v1/settlements/${kind}/${id}/items?offset=${offset}`),
+  makeBatch: (customer_id: string) => request<SettlementRecord>("/api/v1/settlements/batches", {method:"POST",body:JSON.stringify({customer_id})}),
+  processBatch: (id: string) => request<SettlementRecord>(`/api/v1/settlements/batches/${id}/process`, {method:"POST"}),
+  importStatement: (customer: string,file: File) => request<SettlementRecord>(`/api/v1/settlements/statements/import?${new URLSearchParams({customer_id:customer,filename:file.name})}`,
+    {method:"POST",headers:{"Content-Type":"text/csv"},body:file}),
+  reconcile: (import_id: string) => request<SettlementRecord>("/api/v1/settlements/reconciliation-runs",{method:"POST",body:JSON.stringify({import_id})}),
   payments: (offset: number) =>
     request<Payment[]>(`/api/v1/payments?limit=25&offset=${offset}`),
   payment: (id: string) => request<Payment>(`/api/v1/payments/${id}`),
@@ -226,6 +241,7 @@ export interface PaymentEvent {
   provider_reference: string | null; detail: string | null; correlation_id: string | null;
 }
 export interface Payment {
+  settlement_journal_id?: string | null;
   id: string; customer_id: string; source_id: string; actor_id: string;
   customer_reference: string; beneficiary_name: string; destination_reference: string;
   amount: Money; currency: string; rail: "SIMULATED_INR"; status: string;
@@ -238,6 +254,7 @@ export interface Approval {
   decisions?: {actor:string;decision:string;reason:string;decided_at:string}[];
 }
 export interface Account {
+  customer_id?: string;
   membership_role: "owner" | "administrator" | "member" | "viewer";
   id: string;
   reference: string;

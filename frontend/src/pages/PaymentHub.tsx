@@ -45,6 +45,13 @@ function MakerHub({ maker }: { maker: string }) {
     return () => { current = false; };
   }, [offset, revision, canCreate]);
 
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get("payment");
+    let current = true;
+    if (id) api.payment(id).then(p => { if (current) select(p); }).catch(e => { if (current) setError(e.message); });
+    return () => { current = false; };
+  }, [maker]);
+
   async function open(id: string) {
     setBusy(true); setError("");
     try { select(await api.payment(id)); } catch (e) { setError((e as Error).message); }
@@ -148,7 +155,8 @@ function MakerHub({ maker }: { maker: string }) {
         Approval:selected.approval_status || "Not required", Created:new Date(selected.created_at).toLocaleString(),
         Updated:new Date(selected.updated_at).toLocaleString()
       }).map(([label,value]) => <div key={label}><dt>{label}</dt><dd className="mono">{value}</dd></div>)}</dl>
-      {selected.status === "accepted" && <p className="small-note">Accepted by the simulated rail. Settlement is still pending.</p>}
+      {selected.status === "accepted" && !selected.settlement_journal_id && <p className="small-note">Accepted by the simulated rail. Settlement is still pending.</p>}
+      {selected.settlement_journal_id && <p className="small-note">Settled · Journal <span className="mono">{selected.settlement_journal_id}</span></p>}
       <div className="button-row">
         {["ready_for_submission","outcome_unknown"].includes(selected.status) &&
           user?.permissions.includes("payments.submit") &&
