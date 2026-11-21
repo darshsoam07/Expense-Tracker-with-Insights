@@ -509,3 +509,7 @@ When asked to implement LedgerOps 2.0:
 10. Report actual validation results and leave unverified items clearly marked.
 
 **Definition of done:** a requirement is done only when its implementation, tests, user-facing behavior, documentation, and applicable acceptance checks are present. A mockup or placeholder does not satisfy a functional requirement.
+
+### PR 7d settlement operations
+
+The local implementation adds customer-scoped settlement batches, bounded simulated rail statement imports and persisted reconciliation results. Batch item journals use the platform-owned INR nostro. Operators review unresolved statement discrepancies in the Settlements and Reconciliation workspaces.
