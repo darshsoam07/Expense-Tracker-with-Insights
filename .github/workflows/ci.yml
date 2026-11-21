@@ -108,7 +108,7 @@ jobs:
               export TEST_DATABASE_URL="postgresql+psycopg://ledgerops_runtime:${RUNTIME_PASSWORD}@database/ledgerops"
               export TEST_MIGRATION_DATABASE_URL="postgresql+psycopg://ledgerops_migrator:${MIGRATION_PASSWORD}@database/ledgerops"
               export REQUIRE_DATABASE_TESTS=1
-              /tmp/hold-tests/bin/python -m pytest -p no:cacheprovider --no-cov tests/integration/test_holds.py tests/integration/test_payments.py tests/integration/test_settlement.py
+              /tmp/hold-tests/bin/python -m pytest -p no:cacheprovider --no-cov tests/integration/test_holds.py tests/integration/test_payments.py tests/integration/test_settlement.py tests/integration/test_operations.py
             '
       - if: always()
         run: docker compose logs --no-color
