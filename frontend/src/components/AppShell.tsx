@@ -37,9 +37,15 @@ export const destinations: {
   { slug: "accounts", label: "Accounts", group: "Workspace", icon: Wallet },
   {
     slug: "transfers",
-    label: "Payments & Transfers",
+    label: "Internal Transfers",
     group: "Workspace",
     icon: ArrowLeftRight,
+  },
+  {
+    slug: "payments",
+    label: "Payment Hub",
+    group: "Workspace",
+    icon: Building2,
   },
   {
     slug: "ledger",

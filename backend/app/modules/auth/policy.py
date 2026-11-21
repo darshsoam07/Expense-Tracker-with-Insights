@@ -9,6 +9,10 @@ from enum import StrEnum
 
 
 class Permission(StrEnum):
+    PAYMENTS_READ = "payments.read"
+    PAYMENTS_CREATE = "payments.create"
+    PAYMENTS_SUBMIT = "payments.submit"
+    PAYMENTS_CANCEL = "payments.cancel"
     APPROVALS_READ = "approvals.read"
     APPROVALS_DECIDE = "approvals.decide"
     HOLDS_READ = "holds.read"
@@ -42,6 +46,10 @@ class Role(StrEnum):
 ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.ADMIN: frozenset(
         {
+            Permission.PAYMENTS_READ,
+            Permission.PAYMENTS_CREATE,
+            Permission.PAYMENTS_SUBMIT,
+            Permission.PAYMENTS_CANCEL,
             Permission.APPROVALS_READ,
             Permission.APPROVALS_DECIDE,
             Permission.ACCOUNTS_READ,
@@ -58,6 +66,10 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     ),
     Role.OPERATOR: frozenset(
         {
+            Permission.PAYMENTS_READ,
+            Permission.PAYMENTS_CREATE,
+            Permission.PAYMENTS_SUBMIT,
+            Permission.PAYMENTS_CANCEL,
             Permission.APPROVALS_READ,
             Permission.PLATFORM_READ,
             Permission.ACCOUNTS_READ,
@@ -69,10 +81,16 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
         }
     ),
     Role.APPROVER: frozenset(
-        {Permission.PLATFORM_READ, Permission.APPROVALS_READ, Permission.APPROVALS_DECIDE}
+        {
+            Permission.PLATFORM_READ,
+            Permission.APPROVALS_READ,
+            Permission.APPROVALS_DECIDE,
+            Permission.PAYMENTS_READ,
+        }
     ),
     Role.AUDITOR: frozenset(
         {
+            Permission.PAYMENTS_READ,
             Permission.APPROVALS_READ,
             Permission.AUDIT_READ,
             Permission.PLATFORM_READ,

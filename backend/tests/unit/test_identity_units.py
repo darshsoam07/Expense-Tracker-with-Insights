@@ -120,6 +120,18 @@ def test_role_grants_follow_least_privilege() -> None:
     assert holders[Permission.AUDIT_READ] == {Role.ADMIN, Role.AUDITOR}
     assert holders[Permission.PLATFORM_READ] == set(Role)
     assert holders[Permission.TRANSFERS_CREATE] == {Role.ADMIN, Role.OPERATOR}
+    assert holders[Permission.PAYMENTS_READ] == {
+        Role.ADMIN,
+        Role.OPERATOR,
+        Role.APPROVER,
+        Role.AUDITOR,
+    }
+    for permission in (
+        Permission.PAYMENTS_CREATE,
+        Permission.PAYMENTS_SUBMIT,
+        Permission.PAYMENTS_CANCEL,
+    ):
+        assert holders[permission] == {Role.ADMIN, Role.OPERATOR}
     for permission in (Permission.ACCOUNTS_READ, Permission.LEDGER_READ):
         assert holders[permission] == {Role.ADMIN, Role.OPERATOR, Role.AUDITOR}
     assert ROLE_PERMISSIONS[Role.VIEWER] == {Permission.PLATFORM_READ}
@@ -127,6 +139,7 @@ def test_role_grants_follow_least_privilege() -> None:
         Permission.PLATFORM_READ,
         Permission.APPROVALS_READ,
         Permission.APPROVALS_DECIDE,
+        Permission.PAYMENTS_READ,
     }
 
 
@@ -135,6 +148,10 @@ def test_admin_grants_are_listed_not_inherited() -> None:
     assert ROLE_PERMISSIONS[Role.ADMIN] == {
         Permission.APPROVALS_READ,
         Permission.APPROVALS_DECIDE,
+        Permission.PAYMENTS_READ,
+        Permission.PAYMENTS_CREATE,
+        Permission.PAYMENTS_SUBMIT,
+        Permission.PAYMENTS_CANCEL,
         Permission.ACCOUNTS_READ,
         Permission.LEDGER_READ,
         Permission.TRANSFERS_CREATE,

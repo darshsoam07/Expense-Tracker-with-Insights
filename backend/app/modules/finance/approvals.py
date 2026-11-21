@@ -11,7 +11,7 @@ from app.core.errors import AppError
 from app.core.principal import Principal
 from app.modules.audit import AuditWriter
 from app.modules.auth.rbac import effective_permissions
-from app.modules.finance import holds
+from app.modules.finance import holds, payments
 from app.modules.finance.transfers import payload_hash, post_transfer
 
 SCOPED = """
@@ -22,10 +22,11 @@ SCOPED = """
  JOIN ledgerops.approval_policies p ON (p.id,p.version)=(r.policy_id,r.policy_version)
  JOIN ledgerops.users u ON u.id=r.maker JOIN ledgerops.account_holds h ON h.id=r.hold_id
  JOIN ledgerops.accounts s ON s.id=r.source_id AND s.customer_id=r.customer_id
- JOIN ledgerops.accounts d ON d.id=r.destination_id
+ LEFT JOIN ledgerops.accounts d ON d.id=r.destination_id
  JOIN ledgerops.customer_members sm ON sm.customer_id=s.customer_id AND sm.active
- JOIN ledgerops.customer_members dm ON dm.customer_id=d.customer_id AND dm.active
- WHERE sm.user_id=:actor AND dm.user_id=:actor
+ LEFT JOIN ledgerops.customer_members dm ON dm.customer_id=d.customer_id AND dm.active
+   AND dm.user_id=:actor
+ WHERE sm.user_id=:actor AND (r.subject_type='payment' OR dm.user_id IS NOT NULL)
 """
 
 
@@ -127,7 +128,9 @@ def decide(
             hold = holds.detail(db, r.hold_id)
             if hold["account_id"] != r.source_id or Decimal(hold["remaining"]) != r.amount:
                 raise AppError(409, "reservation_changed", "Reservation no longer matches.")
-            if status == "approved":
+            if status == "approved" and r.subject_type == "payment":
+                payments.approve(db, r.subject_id, r.payload_hash, actor, now, request_id)
+            elif status == "approved":
                 if (
                     r.currency != "INR"
                     or payload_hash(
@@ -176,6 +179,19 @@ def decide(
                     reason="Approval expired" if expired else reason,
                 ):
                     raise AppError(409, "release_conflict", "Reservation release conflicted.")
+                if r.subject_type == "payment":
+                    db.execute(
+                        text("""INSERT INTO ledgerops.payment_events
+                        SELECT gen_random_uuid(),id,'cancelled',:actor,:now,provider_reference,
+                        :reason,:correlation FROM ledgerops.payment_instructions WHERE id=:payment
+                        """),
+                        {
+                            **params,
+                            "payment": r.subject_id,
+                            "actor": None if expired else actor,
+                            "reason": "Approval expired" if expired else reason,
+                        },
+                    )
             db.execute(
                 text("""UPDATE ledgerops.approval_requests SET status=:status,
                 completed_at=:now WHERE id=:id"""),

@@ -39,6 +39,7 @@ import { destinations } from "../components/AppShell";
 import { useAuth } from "../context/AuthContext";
 import { FinancialWorkspace } from "./FinancialWorkspace";
 import { ApprovalQueue } from "./ApprovalQueue";
+import { PaymentHub } from "./PaymentHub";
 
 
 interface Props {
@@ -329,6 +330,7 @@ export function ConsolePages({
       </>
     );
   else if (section === "approvals") content = <ApprovalQueue />;
+  else if (section === "payments") content = <PaymentHub />;
   else if (["accounts","transfers","ledger"].includes(section))
     content = <FinancialWorkspace key={section} section={section} />;
   else if (section === "health" || section === "infrastructure")

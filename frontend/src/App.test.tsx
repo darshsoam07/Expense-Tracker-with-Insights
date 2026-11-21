@@ -245,7 +245,7 @@ test("ambiguous transfer retry preserves decimal body, CSRF and idempotency key"
 test("transfer history has an empty state and settings displays operator profile", async () => {
   render(<App />);
   fireEvent.click(
-    await screen.findByRole("link", { name: "Payments & Transfers" }),
+    await screen.findByRole("link", { name: "Internal Transfers" }),
   );
   expect(
     await screen.findByText("No posted transfers on this page."),

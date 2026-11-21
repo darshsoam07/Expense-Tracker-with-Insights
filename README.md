@@ -8,14 +8,14 @@ A **simulated** cloud-native banking and financial-operations platform, built as
 
 | Item | State |
 |---|---|
-| Phase | PR 7a merged in #8. PR 7b adds independent transfer review in the local feature branch. See [ADR 0012](docs/architecture/adr/0012-transfer-approvals.md). |
+| Phase | PR 7b merged in #9. PR 7c adds reserved payment instructions and a deterministic simulated INR rail. See [ADR 0013](docs/architecture/adr/0013-simulated-payment-rails.md). |
 | PR 3 | ✅ Merged — PostgreSQL 17, Alembic foundation migration, Docker Compose stack, FastAPI health endpoints |
 | PR 3H | ✅ Merged — ADR-0009 amendments, implementation roadmap, README update, repo hygiene |
 | PR 5 | ✅ Merged (GitHub PR #2) — Institutional Luxury website and operations console, frontend CI job |
 | PR 4a | ✅ Merged (GitHub PR #5) — Identity, RBAC, sessions, CSRF, and append-only audit trail |
 | PR 4b | Merged — Frontend auth integration, login/logout UI, same-origin Vite proxy, CORS removal, Windows CI job |
 | PR 6a | Merged in GitHub PR #7 |
-| Application | Cookie-authenticated console with scoped INR accounts, posted journals and simulated internal transfers |
+| Application | Cookie-authenticated console with scoped INR accounts, internal transfers, approvals and reserved simulated payment instructions |
 | Legacy Expense Tracker | Preserved and runnable in `legacy/expense-tracker/` |
 | Cloud resources | **None.** Nothing is deployed anywhere |
 
