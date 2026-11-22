@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError
 from app.core.principal import Principal
 from app.modules.audit import AuditWriter
-from app.modules.finance import holds
+from app.modules.finance import exceptions, holds
 from app.modules.finance.approval_policies import match_policy
 from app.modules.finance.payment_rails import Rail, SimulatedRail
 
@@ -376,6 +376,13 @@ def submit(
                 key=f"payment/{payment}/failed",
                 digest=hashlib.sha256(row.provider_reference.encode()).hexdigest(),
                 reason="Simulated rail rejection",
+            )
+            exceptions.generate(
+                db, row.customer_id, "payment", payment, "payment_failed", actor, now
+            )
+        elif kind == "outcome_unknown":
+            exceptions.generate(
+                db, row.customer_id, "payment", payment, "payment_outcome_unknown", actor, now
             )
         audit.record(
             db,

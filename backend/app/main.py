@@ -20,6 +20,7 @@ from app.api.approvals import router as approvals_router
 from app.api.auth import me_router
 from app.api.auth import router as auth_router
 from app.api.deps import enforce_csrf
+from app.api.exceptions import router as exceptions_router
 from app.api.health import router as health_router
 from app.api.holds import router as holds_router
 from app.api.payments import router as payments_router
@@ -92,6 +93,7 @@ def create_app(settings: Settings | None = None, *, clock: Clock | None = None) 
     app.include_router(me_router)
     app.include_router(holds_router)
     app.include_router(payments_router)
+    app.include_router(exceptions_router)
     app.include_router(settlements_router)
     app.include_router(accounts_router)
     app.include_router(approvals_router)

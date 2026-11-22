@@ -25,6 +25,8 @@ class Permission(StrEnum):
     USERS_MANAGE = "users.manage"
     AUDIT_READ = "audit.read"
     PLATFORM_READ = "platform.read"
+    EXCEPTIONS_READ = "exceptions.read"
+    EXCEPTIONS_MANAGE = "exceptions.manage"
 
 
 class Role(StrEnum):
@@ -62,6 +64,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.USERS_MANAGE,
             Permission.AUDIT_READ,
             Permission.PLATFORM_READ,
+            Permission.EXCEPTIONS_READ,
+            Permission.EXCEPTIONS_MANAGE,
         }
     ),
     Role.OPERATOR: frozenset(
@@ -78,6 +82,8 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.TRANSFERS_CREATE,
             Permission.HOLDS_CREATE,
             Permission.HOLDS_RELEASE,
+            Permission.EXCEPTIONS_READ,
+            Permission.EXCEPTIONS_MANAGE,
         }
     ),
     Role.APPROVER: frozenset(
@@ -86,6 +92,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.APPROVALS_READ,
             Permission.APPROVALS_DECIDE,
             Permission.PAYMENTS_READ,
+            Permission.EXCEPTIONS_READ,
         }
     ),
     Role.AUDITOR: frozenset(
@@ -97,6 +104,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.ACCOUNTS_READ,
             Permission.LEDGER_READ,
             Permission.HOLDS_READ,
+            Permission.EXCEPTIONS_READ,
         }
     ),
     Role.VIEWER: frozenset({Permission.PLATFORM_READ}),
