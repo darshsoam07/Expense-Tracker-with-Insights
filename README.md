@@ -9,7 +9,7 @@ The platform is designed around one core principle:
 
 **Every financial operation must be traceable, authorized, atomic and auditable.**
 
-> **Project status:** Core financial and banking operations are implemented through settlement and reconciliation. The final Exceptions & Investigations milestone (PR 7e) is currently in development.
+> **Project status:** Core financial and banking operations are complete through Stage D (Intelligent Operations Workbench), including double-entry ledger, maker-checker approvals, payment orchestration, settlement, reconciliation, and operational exceptions (PR 7e).
 
 ---
 
@@ -123,18 +123,15 @@ Accepted payments are not represented as settled payments.
 
 ### Exceptions and investigations
 
-*Implementation in progress.*
+The Exceptions & Investigations workspace turns observed payment, approval, settlement, and reconciliation failures into customer-scoped, append-only operational work items. Authorized operators may assign, investigate, note, resolve, and close an exception. These actions are audited and never change financial records, balances, journals, or holds. See [the exception lifecycle and API contract](docs/architecture/adr/0015-operational-exceptions.md).
 
-The planned operational workspace includes:
+Key capabilities:
 
-- Payment and settlement exceptions.
-- Reconciliation discrepancies.
-- Expired approval and stale-hold exceptions.
-- Customer-scoped investigation queues.
-- Assignment and reassignment.
-- Investigation notes.
-- Resolution and closure.
-- Append-only operational event history.
+- Customer-scoped exception lifecycle (`pending` → `investigating` → `resolved` → `closed`).
+- Sequence-ordered append-only event history (`exception_events`) with PostgreSQL `FOR UPDATE` concurrency locking.
+- Automatic exception generation from payment rejections, rail timeouts, approval expirations, settlement failures, and reconciliation discrepancies.
+- Investigation notes, assignment, and status transitions with mandatory reason codes.
+- Granular RBAC permissions (`exceptions.read`, `exceptions.manage`).
 
 ## 3. Technology stack
 
@@ -596,7 +593,7 @@ The initial implementation roadmap:
 | PR 7b | Maker-checker approvals | Completed |
 | PR 7c | Simulated payment rails | Completed |
 | PR 7d | Settlement and reconciliation | Completed |
-| PR 7e | Exceptions and investigations | In progress |
+| PR 7e | Exceptions and investigations | Completed |
 
 PR numbers describe the project roadmap and are not necessarily the corresponding GitHub pull request numbers.
 

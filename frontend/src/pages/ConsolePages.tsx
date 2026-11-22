@@ -41,6 +41,7 @@ import { FinancialWorkspace } from "./FinancialWorkspace";
 import { ApprovalQueue } from "./ApprovalQueue";
 import { SettlementWorkspace } from "./SettlementWorkspace";
 import { PaymentHub } from "./PaymentHub";
+import { ExceptionsWorkspace } from "./ExceptionsWorkspace";
 
 
 interface Props {
@@ -318,7 +319,7 @@ export function ConsolePages({
                 </span>
                 <div>
                   <strong>Exceptions</strong>
-                  <small>Awaiting workflow integration</small>
+                    <small>Investigate recorded operational events</small>
                 </div>
                 <ChevronRight size={15} />
               </Link>
@@ -331,6 +332,7 @@ export function ConsolePages({
       </>
     );
   else if (section === "approvals") content = <ApprovalQueue />;
+  else if (section === "exceptions") content = <ExceptionsWorkspace />;
   else if (section === "settlements" || section === "reconciliation") content = <SettlementWorkspace initial={section === "settlements" ? "batches" : "reconciliation-runs"} />;
   else if (section === "payments") content = <PaymentHub />;
   else if (["accounts","transfers","ledger"].includes(section))

@@ -99,6 +99,7 @@ def test_effective_permissions_are_the_union_of_roles(db: Session, make_user: Us
         "accounts.read",
         "ledger.read",
         "holds.read",
+        "exceptions.read",
     }
     assert effective_permissions(db, make_user(("admin",)).id) == {
         "approvals.read",
@@ -117,6 +118,8 @@ def test_effective_permissions_are_the_union_of_roles(db: Session, make_user: Us
         "holds.release",
         "audit.read",
         "platform.read",
+        "exceptions.read",
+        "exceptions.manage",
     }
 
 

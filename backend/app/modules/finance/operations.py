@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError
 from app.core.principal import Principal
 from app.modules.audit import AuditWriter
+from app.modules.finance import exceptions
 from app.modules.finance.settlement import settle
 from app.modules.finance.statements import parse_statement
 
@@ -150,6 +151,15 @@ def process(
             db.rollback()
             failure = exc.code
             log(db, audit, actor, "settlement.failed", payment, request)
+            exceptions.generate(
+                db,
+                b["customer_id"],
+                "settlement",
+                payment,
+                "settlement_failed",
+                actor,
+                audit.clock.now(),
+            )
         db.execute(
             text("""UPDATE ledgerops.settlement_candidates SET failure=CASE
            WHEN EXISTS(SELECT FROM ledgerops.settlement_items WHERE payment_id=:payment)
@@ -280,6 +290,17 @@ def reconcile(
       SELECT :run,line_id,payment_id,classification,evidence FROM compared"""),
         {"imp": imp, "c": customer, "run": run},
     )
+    results = db.execute(
+        text(
+            """SELECT COALESCE(line_id,payment_id), classification
+            FROM ledgerops.reconciliation_results WHERE run_id=:run
+            AND classification = ANY(:kinds)"""
+        ),
+        {"run": run, "kinds": list(exceptions.RECONCILIATION_TYPES)},
+    ).all()
+    now = audit.clock.now()
+    for result_id, classification in results:
+        exceptions.generate(db, customer, "reconciliation", result_id, classification, actor, now)
     db.execute(
         text(
             "UPDATE ledgerops.reconciliation_runs SET completed_at=clock_timestamp() WHERE id=:id"

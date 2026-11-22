@@ -11,7 +11,7 @@ from app.core.errors import AppError
 from app.core.principal import Principal
 from app.modules.audit import AuditWriter
 from app.modules.auth.rbac import effective_permissions
-from app.modules.finance import holds, payments
+from app.modules.finance import exceptions, holds, payments
 from app.modules.finance.transfers import payload_hash, post_transfer
 
 SCOPED = """
@@ -212,6 +212,10 @@ def decide(
             request_id=request_id,
             reason="Approval expired" if expired else reason,
         )
+        if expired:
+            exceptions.generate(
+                db, r.customer_id, "approval", approval, "approval_expired", None, now
+            )
     except Exception:
         db.rollback()
         raise

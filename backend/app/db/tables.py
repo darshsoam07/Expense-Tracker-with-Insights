@@ -6,6 +6,7 @@ the two cannot silently drift apart.
 """
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     Date,
@@ -435,4 +436,40 @@ reconciliation_results = Table(
     Column("payment_id", Uuid, nullable=True),
     Column("classification", Text, nullable=False),
     Column("evidence", JSONB, nullable=False),
+)
+
+exceptions = Table(
+    "exceptions",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("reference", Uuid, nullable=False),
+    Column("customer_id", Uuid, nullable=False),
+    Column("source_domain", Text, nullable=False),
+    Column("source_reference", Uuid, nullable=False),
+    Column("exception_type", Text, nullable=False),
+    Column("severity", Text, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("title", Text, nullable=False),
+    Column("description", Text, nullable=False),
+    Column("assigned_user_id", Uuid, nullable=True),
+    Column("resolution_summary", Text, nullable=True),
+    Column("resolved_at", DateTime(timezone=True), nullable=True),
+    Column("closed_at", DateTime(timezone=True), nullable=True),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
+)
+
+exception_events = Table(
+    "exception_events",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("sequence", BigInteger, nullable=False),
+    Column("exception_id", Uuid, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("actor_id", Uuid, nullable=True),
+    Column("occurred_at", DateTime(timezone=True), nullable=False),
+    Column("previous_status", Text, nullable=True),
+    Column("next_status", Text, nullable=True),
+    Column("note", Text, nullable=True),
+    Column("metadata", JSONB, nullable=False),
 )

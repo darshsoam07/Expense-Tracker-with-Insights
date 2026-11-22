@@ -134,12 +134,21 @@ def test_role_grants_follow_least_privilege() -> None:
         assert holders[permission] == {Role.ADMIN, Role.OPERATOR}
     for permission in (Permission.ACCOUNTS_READ, Permission.LEDGER_READ):
         assert holders[permission] == {Role.ADMIN, Role.OPERATOR, Role.AUDITOR}
+    # Everyone who reviews work may read exceptions; only operators and admins investigate them.
+    assert holders[Permission.EXCEPTIONS_READ] == {
+        Role.ADMIN,
+        Role.OPERATOR,
+        Role.APPROVER,
+        Role.AUDITOR,
+    }
+    assert holders[Permission.EXCEPTIONS_MANAGE] == {Role.ADMIN, Role.OPERATOR}
     assert ROLE_PERMISSIONS[Role.VIEWER] == {Permission.PLATFORM_READ}
     assert ROLE_PERMISSIONS[Role.APPROVER] == {
         Permission.PLATFORM_READ,
         Permission.APPROVALS_READ,
         Permission.APPROVALS_DECIDE,
         Permission.PAYMENTS_READ,
+        Permission.EXCEPTIONS_READ,
     }
 
 
@@ -162,5 +171,7 @@ def test_admin_grants_are_listed_not_inherited() -> None:
         Permission.USERS_MANAGE,
         Permission.AUDIT_READ,
         Permission.PLATFORM_READ,
+        Permission.EXCEPTIONS_READ,
+        Permission.EXCEPTIONS_MANAGE,
     }
     assert set().union(*ROLE_PERMISSIONS.values()) == set(Permission)

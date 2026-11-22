@@ -130,7 +130,29 @@ export interface SettlementRecord {
   currency?: string; item_count?: number; total?: string; settled_count?: number; failed_count?: number;
   matched_count?: number; exception_count?: number; row_count?: number; replayed?: boolean;
 }
+export interface ExceptionEvent {
+  id: string; kind: string; actor_name?: string | null; occurred_at: string; note?: string | null;
+  previous_status?: string | null; next_status?: string | null;
+  metadata?: { assigned_user_id?: string; assigned_name?: string; previous_assigned_user_id?: string | null };
+}
+export interface ExceptionRecord {
+  id: string; reference: string; customer_id: string; exception_type: string; severity: string;
+  status: string; source_domain: string; source_reference: string; title: string;
+  description?: string; assigned_user_id: string | null; assigned_name?: string | null;
+  resolution_summary?: string | null; created_at: string; updated_at: string;
+  events?: ExceptionEvent[];
+}
+export interface ExceptionPage { items: ExceptionRecord[]; total: number; limit: number; offset: number; }
+export interface ExceptionAssignee { id: string; display_name: string; }
 export const api = {
+  exceptions: (offset: number, query = "") => request<ExceptionPage>(`/api/v1/exceptions?offset=${offset}${query}`),
+  exception: (id: string) => request<ExceptionRecord>(`/api/v1/exceptions/${id}`),
+  exceptionAssignees: (id: string) => request<ExceptionAssignee[]>(`/api/v1/exceptions/${id}/assignees`),
+  assignException: (id: string, assigned_user_id: string) => request<ExceptionRecord>(`/api/v1/exceptions/${id}/assign`, {method:"POST",body:JSON.stringify({assigned_user_id})}),
+  transitionException: (id: string, status: string, reason = "") => request<ExceptionRecord>(`/api/v1/exceptions/${id}/transition`, {method:"POST",body:JSON.stringify({status,reason})}),
+  noteException: (id: string, body: string) => request<ExceptionRecord>(`/api/v1/exceptions/${id}/notes`, {method:"POST",body:JSON.stringify({body})}),
+  resolveException: (id: string, body: string) => request<ExceptionRecord>(`/api/v1/exceptions/${id}/resolve`, {method:"POST",body:JSON.stringify({body})}),
+  closeException: (id: string, reason: string) => request<ExceptionRecord>(`/api/v1/exceptions/${id}/close`, {method:"POST",body:JSON.stringify({status:"closed",reason})}),
   settlementList: (kind: SettlementKind, offset: number) => request<SettlementRecord[]>(`/api/v1/settlements/${kind}?offset=${offset}`),
   settlementBatch: (id: string) => request<SettlementRecord>(`/api/v1/settlements/batches/${encodeURIComponent(id)}`),
   settlementItems: (kind: SettlementKind, id: string, offset: number) =>
